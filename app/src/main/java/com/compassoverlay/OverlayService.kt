@@ -241,6 +241,10 @@ class OverlayService : Service() {
 
     fun arrangeCross() {
         Prefs.lastArrange = Prefs.ARRANGE_CROSS
+        Prefs.setShowDir(Prefs.DIR_NORTHEAST, false)
+        Prefs.setShowDir(Prefs.DIR_SOUTHEAST, false)
+        Prefs.setShowDir(Prefs.DIR_NORTHWEST, false)
+        Prefs.setShowDir(Prefs.DIR_SOUTHWEST, false)
         val dm = resources.displayMetrics
         val gap = (Prefs.spacingDp * dm.density).toInt()
         val labelSize = (Prefs.textSizeSp * dm.density * 1.5f).toInt()
@@ -255,6 +259,10 @@ class OverlayService : Service() {
 
     fun arrangeEight() {
         Prefs.lastArrange = Prefs.ARRANGE_EIGHT
+        Prefs.setShowDir(Prefs.DIR_NORTHEAST, true)
+        Prefs.setShowDir(Prefs.DIR_SOUTHEAST, true)
+        Prefs.setShowDir(Prefs.DIR_NORTHWEST, true)
+        Prefs.setShowDir(Prefs.DIR_SOUTHWEST, true)
         val dm = resources.displayMetrics
         val gap = (Prefs.spacingDp * dm.density).toInt()
         val diag = (gap / 1.414).toInt()
