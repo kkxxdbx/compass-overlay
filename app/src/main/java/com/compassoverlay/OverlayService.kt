@@ -40,6 +40,10 @@ class OverlayService : Service() {
         fun reArrange() {
             instance?.applyArrange()
         }
+
+        fun scaleSpacing(oldGap: Int, newGap: Int) {
+            instance?.scaleSpacingInternal(oldGap, newGap)
+        }
     }
 
     private data class Label(
@@ -52,8 +56,7 @@ class OverlayService : Service() {
 
     private val labels = mutableListOf<Label>()
     private var wm: WindowManager? = null
-    private var startX = 0
-    private var startY = 0
+    private var activeLabel: Label? = null
     private var dragging = false
     private var currentDx = 0
     private var currentDy = 0
@@ -86,7 +89,7 @@ class OverlayService : Service() {
         )
         val notification: Notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("方向罗盘已开启")
-            .setContentText("点击打开设置，北南西东可单独拖动")
+            .setContentText("点击打开设置：整体移动、十字/八方模式、调间距字号")
             .setSmallIcon(R.drawable.ic_stat_compass)
             .setContentIntent(pi)
             .setOngoing(true)
@@ -124,6 +127,7 @@ class OverlayService : Service() {
             if (!Prefs.showDir(dir)) continue
             addLabel(wm, type, dir, text)
         }
+        labels.forEach { l -> l.view.post { clampToScreen() } }
     }
 
     private fun addLabel(wm: WindowManager, type: Int, dir: String, text: String) {
@@ -155,44 +159,39 @@ class OverlayService : Service() {
         val label = Label(dir, v, p)
         v.listener = object : CompassLabelView.Listener {
             override fun onDragStart() {
-                startX = label.params.x
-                startY = label.params.y
+                activeLabel = label
                 if (Prefs.groupMove) {
                     labels.forEach { l ->
                         l.startAllX = l.params.x
                         l.startAllY = l.params.y
                     }
-                    dragging = true
-                    currentDx = 0
-                    currentDy = 0
-                    Choreographer.getInstance().postFrameCallback(frameCallback)
+                } else {
+                    label.startAllX = label.params.x
+                    label.startAllY = label.params.y
                 }
             }
 
             override fun onDrag(dx: Int, dy: Int) {
                 currentDx = dx
                 currentDy = dy
-                if (!Prefs.groupMove) {
-                    label.params.x = startX + dx
-                    label.params.y = startY + dy
-                    try {
-                        wm?.updateViewLayout(label.view, label.params)
-                    } catch (_: Exception) {
-                    }
+                if (!dragging) {
+                    dragging = true
+                    Choreographer.getInstance().postFrameCallback(frameCallback)
                 }
             }
 
             override fun onDragEnd() {
-                if (Prefs.groupMove) {
-                    dragging = false
-                    applyFrame()
-                }
+                dragging = false
+                applyFrame()
+                activeLabel = null
                 labels.forEach { l ->
                     Prefs.setLabelPos(l.dir, l.params.x, l.params.y)
                 }
             }
 
             override fun onClick() {
+                dragging = false
+                activeLabel = null
                 val i = Intent(this@OverlayService, MainActivity::class.java)
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(i)
@@ -208,14 +207,19 @@ class OverlayService : Service() {
     }
 
     private fun applyFrame() {
-        val w = wm ?: return
-        labels.forEach { l ->
-            l.params.x = l.startAllX + currentDx
-            l.params.y = l.startAllY + currentDy
-            try {
-                w.updateViewLayout(l.view, l.params)
-            } catch (_: Exception) {
-            }
+        if (Prefs.groupMove) {
+            labels.forEach { l -> updatePos(l, currentDx, currentDy) }
+        } else {
+            activeLabel?.let { l -> updatePos(l, currentDx, currentDy) }
+        }
+    }
+
+    private fun updatePos(l: Label, dx: Int, dy: Int) {
+        l.params.x = l.startAllX + dx
+        l.params.y = l.startAllY + dy
+        try {
+            wm?.updateViewLayout(l.view, l.params)
+        } catch (_: Exception) {
         }
     }
 
@@ -287,6 +291,65 @@ class OverlayService : Service() {
         }
     }
 
+    private fun scaleSpacingInternal(oldGap: Int, newGap: Int) {
+        if (oldGap <= 0 || newGap == oldGap) return
+        if (labels.isEmpty()) return
+        val k = newGap.toFloat() / oldGap
+        var minX = Int.MAX_VALUE
+        var minY = Int.MAX_VALUE
+        var maxX = Int.MIN_VALUE
+        var maxY = Int.MIN_VALUE
+        labels.forEach { l ->
+            if (l.params.x < minX) minX = l.params.x
+            if (l.params.y < minY) minY = l.params.y
+            if (l.params.x > maxX) maxX = l.params.x
+            if (l.params.y > maxY) maxY = l.params.y
+        }
+        val centerX = (minX + maxX) / 2f
+        val centerY = (minY + maxY) / 2f
+        labels.forEach { l ->
+            val nx = (centerX + (l.params.x - centerX) * k).toInt()
+            val ny = (centerY + (l.params.y - centerY) * k).toInt()
+            l.params.x = nx
+            l.params.y = ny
+            Prefs.setLabelPos(l.dir, nx, ny)
+            try {
+                wm?.updateViewLayout(l.view, l.params)
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    private fun clampToScreen() {
+        val dm = resources.displayMetrics
+        val sw = dm.widthPixels
+        val sh = dm.heightPixels
+        labels.forEach { l ->
+            val lw = l.view.width
+            val lh = l.view.height
+            var nx = l.params.x
+            var ny = l.params.y
+            if (nx < 0) nx = 0
+            if (ny < 0) ny = 0
+            if (lw > 0 && nx + lw > sw) nx = (sw - lw).coerceAtLeast(0)
+            if (lh > 0 && ny + lh > sh) ny = (sh - lh).coerceAtLeast(0)
+            if (nx != l.params.x || ny != l.params.y) {
+                l.params.x = nx
+                l.params.y = ny
+                Prefs.setLabelPos(l.dir, nx, ny)
+                try {
+                    wm?.updateViewLayout(l.view, l.params)
+                } catch (_: Exception) {
+                }
+            }
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        clampToScreen()
+    }
+
     private fun rebuildAll() {
         val w = wm ?: return
         labels.forEach { l ->
@@ -303,6 +366,8 @@ class OverlayService : Service() {
 
     override fun onDestroy() {
         instance = null
+        dragging = false
+        activeLabel = null
         val w = wm
         labels.forEach { l ->
             try {
