@@ -163,6 +163,9 @@ class MainActivity : AppCompatActivity() {
 
         buildColorRow()
         syncUi()
+        Analytics.init(this)
+        Analytics.track(this, "app_open")
+        UpdateChecker.check(this)
     }
 
     private fun onDirToggled(dir: String, checked: Boolean) {

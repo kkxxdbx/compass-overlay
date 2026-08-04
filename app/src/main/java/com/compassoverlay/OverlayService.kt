@@ -8,13 +8,16 @@ import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.graphics.PixelFormat
+import android.hardware.display.DisplayManager
 import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.view.Choreographer
+import android.view.Display
 import android.view.Gravity
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
+import kotlin.math.roundToInt
 
 class OverlayService : Service() {
 
@@ -58,12 +61,34 @@ class OverlayService : Service() {
     private var wm: WindowManager? = null
     private var activeLabel: Label? = null
     private var dragging = false
+    private var dirty = false
     private var currentDx = 0
     private var currentDy = 0
+    private var frameCount = 0
+
+    private val refreshRateHz: Int by lazy {
+        val dm = getSystemService(DisplayManager::class.java)
+        (dm?.getDisplay(Display.DEFAULT_DISPLAY)?.refreshRate ?: 60f)
+            .roundToInt().coerceIn(60, 240)
+    }
+
+    private val followInterval: Int by lazy {
+        kotlin.math.max(1, (refreshRateHz / 60f).roundToInt())
+    }
+
     private val frameCallback = object : Choreographer.FrameCallback {
         override fun doFrame(frameTimeNanos: Long) {
             if (!dragging) return
-            applyFrame()
+            if (dirty) {
+                dirty = false
+                val anchor = activeLabel
+                if (anchor != null) updatePos(anchor, currentDx, currentDy)
+                frameCount++
+                if (frameCount >= followInterval) {
+                    frameCount = 0
+                    labels.forEach { l -> if (l !== anchor) updatePos(l, currentDx, currentDy) }
+                }
+            }
             Choreographer.getInstance().postFrameCallback(this)
         }
     }
@@ -172,17 +197,20 @@ class OverlayService : Service() {
             }
 
             override fun onDrag(dx: Int, dy: Int) {
+                if (dx == currentDx && dy == currentDy) return
                 currentDx = dx
                 currentDy = dy
+                dirty = true
                 if (!dragging) {
                     dragging = true
+                    frameCount = 0
                     Choreographer.getInstance().postFrameCallback(frameCallback)
                 }
             }
 
             override fun onDragEnd() {
                 dragging = false
-                applyFrame()
+                labels.forEach { l -> updatePos(l, currentDx, currentDy) }
                 activeLabel = null
                 labels.forEach { l ->
                     Prefs.setLabelPos(l.dir, l.params.x, l.params.y)
@@ -203,14 +231,6 @@ class OverlayService : Service() {
             wm.addView(label.view, label.params)
         } catch (e: Exception) {
             e.printStackTrace()
-        }
-    }
-
-    private fun applyFrame() {
-        if (Prefs.groupMove) {
-            labels.forEach { l -> updatePos(l, currentDx, currentDy) }
-        } else {
-            activeLabel?.let { l -> updatePos(l, currentDx, currentDy) }
         }
     }
 

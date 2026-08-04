@@ -14,6 +14,10 @@ class CompassLabelView @JvmOverloads constructor(
     attrs: AttributeSet? = null
 ) : TextView(context, attrs) {
 
+    companion object {
+        private var sharedBg: GradientDrawable? = null
+    }
+
     interface Listener {
         fun onDragStart()
         fun onDrag(dx: Int, dy: Int)
@@ -39,8 +43,12 @@ class CompassLabelView @JvmOverloads constructor(
         setTextColor(Prefs.textColor)
         setTypeface(null, if (Prefs.bold) Typeface.BOLD else Typeface.NORMAL)
         if (Prefs.bgStyle == Prefs.BG_DARK) {
-            val d = GradientDrawable()
-            d.cornerRadius = dp(10).toFloat()
+            var d = sharedBg
+            if (d == null) {
+                d = GradientDrawable()
+                d.cornerRadius = dp(10).toFloat()
+                sharedBg = d
+            }
             d.setColor(Color.argb(Prefs.bgAlpha, 0, 0, 0))
             background = d
             val p = dp(6)
