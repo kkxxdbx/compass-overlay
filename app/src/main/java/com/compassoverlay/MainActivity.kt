@@ -81,12 +81,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         seekSize.min = sizeMin
-        seekSize.max = 40 - sizeMin
-        seekSize.progress = Prefs.textSizeSp - sizeMin
+        seekSize.max = 40
+        seekSize.progress = Prefs.textSizeSp
         seekSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    Prefs.textSizeSp = progress + sizeMin
+                    Prefs.textSizeSp = progress
                     applyAndRefresh()
                 }
             }
@@ -108,11 +108,13 @@ class MainActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(bar: SeekBar) {}
         })
 
-        seekSpacing.progress = Prefs.spacingDp - 40
+        seekSpacing.min = 40
+        seekSpacing.max = 180
+        seekSpacing.progress = Prefs.spacingDp
         txtSpacing.text = getString(R.string.spacing_value, Prefs.spacingDp)
         seekSpacing.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar, progress: Int, fromUser: Boolean) {
-                val v = progress + 40
+                val v = progress
                 txtSpacing.text = getString(R.string.spacing_value, v)
                 if (fromUser) {
                     Prefs.spacingDp = v
@@ -206,11 +208,11 @@ class MainActivity : AppCompatActivity() {
         switchGroupMove.isChecked = Prefs.groupMove
         radioBg.check(if (Prefs.bgStyle == Prefs.BG_DARK) R.id.radioBgDark else R.id.radioBgNone)
         seekSize.min = sizeMin
-        seekSize.max = 40 - sizeMin
-        seekSize.progress = Prefs.textSizeSp - sizeMin
+        seekSize.max = 40
+        seekSize.progress = Prefs.textSizeSp
         seekBgAlpha.progress = Prefs.bgAlpha
         seekBgAlpha.isEnabled = Prefs.bgStyle == Prefs.BG_DARK
-        seekSpacing.progress = Prefs.spacingDp - 40
+        seekSpacing.progress = Prefs.spacingDp
         txtSpacing.text = getString(R.string.spacing_value, Prefs.spacingDp)
     }
 
