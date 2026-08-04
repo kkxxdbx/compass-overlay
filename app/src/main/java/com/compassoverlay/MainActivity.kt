@@ -21,6 +21,9 @@ class MainActivity : AppCompatActivity() {
         0xFF76FF03.toInt(), 0xFFFF5252.toInt(), 0xFF9E9E9E.toInt(), Color.BLACK
     )
 
+    private val sizeMin: Int
+        get() = if (Prefs.isTablet(this)) 12 else 10
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Prefs.init(this)
@@ -77,11 +80,13 @@ class MainActivity : AppCompatActivity() {
             applyAndRefresh()
         }
 
-        seekSize.progress = Prefs.textSizeSp - 12
+        seekSize.min = sizeMin
+        seekSize.max = 40 - sizeMin
+        seekSize.progress = Prefs.textSizeSp - sizeMin
         seekSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    Prefs.textSizeSp = progress + 12
+                    Prefs.textSizeSp = progress + sizeMin
                     applyAndRefresh()
                 }
             }
@@ -200,7 +205,9 @@ class MainActivity : AppCompatActivity() {
         switchBold.isChecked = Prefs.bold
         switchGroupMove.isChecked = Prefs.groupMove
         radioBg.check(if (Prefs.bgStyle == Prefs.BG_DARK) R.id.radioBgDark else R.id.radioBgNone)
-        seekSize.progress = Prefs.textSizeSp - 12
+        seekSize.min = sizeMin
+        seekSize.max = 40 - sizeMin
+        seekSize.progress = Prefs.textSizeSp - sizeMin
         seekBgAlpha.progress = Prefs.bgAlpha
         seekBgAlpha.isEnabled = Prefs.bgStyle == Prefs.BG_DARK
         seekSpacing.progress = Prefs.spacingDp - 40
