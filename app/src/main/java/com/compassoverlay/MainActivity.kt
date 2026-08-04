@@ -163,7 +163,6 @@ class MainActivity : AppCompatActivity() {
 
         buildColorRow()
         syncUi()
-        Analytics.track(this, "app_open")
         UpdateChecker.check(this)
     }
 

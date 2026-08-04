@@ -6,9 +6,3 @@
 
 # UpdateChecker uses BuildConfig.VERSION_CODE/VERSION_NAME via BuildConfig.
 -keep class com.compassoverlay.BuildConfig { *; }
-
-# Umeng analytics SDK: keep all classes and their members.
--keep class com.umeng.** { *; }
--keepclassmembers class com.umeng.** { *; }
--keepclassmembers enum * { *; }
--dontwarn com.umeng.**
