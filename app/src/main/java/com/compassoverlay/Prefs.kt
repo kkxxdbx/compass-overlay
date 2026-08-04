@@ -97,6 +97,11 @@ object Prefs {
         get() = sp.getString("last_arrange", ARRANGE_EIGHT)!!
         set(v) = sp.edit().putString("last_arrange", v).apply()
 
+    /** 是否已提示过「允许后台运行」引导（仅首次提示一次） */
+    var batteryPrompted: Boolean
+        get() = sp.getBoolean("battery_prompted", false)
+        set(v) = sp.edit().putBoolean("battery_prompted", v).apply()
+
     fun labelX(dir: String): Int = sp.getInt("${dir}_x", -1)
 
     fun labelY(dir: String): Int = sp.getInt("${dir}_y", -1)

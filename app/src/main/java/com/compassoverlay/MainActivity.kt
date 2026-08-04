@@ -5,12 +5,14 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.provider.Settings
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.materialswitch.MaterialSwitch
@@ -164,6 +166,29 @@ class MainActivity : AppCompatActivity() {
         buildColorRow()
         syncUi()
         UpdateChecker.check(this)
+        promptBatteryOptimization()
+    }
+
+    /**
+     * 首次进入提示加入电池优化白名单（系统标准的「后台运行」权限）。
+     * 未加入时悬浮窗服务容易被系统（尤其 MIUI）清理导致消失，引导用户开启。
+     */
+    private fun promptBatteryOptimization() {
+        if (Prefs.batteryPrompted) return
+        Prefs.batteryPrompted = true
+        val pm = getSystemService(PowerManager::class.java)
+        if (pm.isIgnoringBatteryOptimizations(packageName)) return
+        AlertDialog.Builder(this)
+            .setTitle("允许后台运行")
+            .setMessage("为保证悬浮窗在后台长期稳定显示、不被系统清理，建议允许「后台运行」（省电策略设为无限制）。\n\n该权限仅用于防止服务被系统回收，不会影响正常使用。")
+            .setPositiveButton("去开启") { _, _ ->
+                try {
+                    startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName")))
+                } catch (_: Exception) {
+                }
+            }
+            .setNegativeButton("暂不", null)
+            .show()
     }
 
     private fun onDirToggled(dir: String, checked: Boolean) {

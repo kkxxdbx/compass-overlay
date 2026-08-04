@@ -6,6 +6,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import org.json.JSONObject
+import java.lang.ref.WeakReference
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -16,6 +17,9 @@ object UpdateChecker {
     fun check(activity: Activity) {
         if (checkedThisRun) return
         checkedThisRun = true
+        // 用弱引用持有 Activity：网络线程返回时 Activity 可能已被销毁，
+        // 直接弹窗会抛 BadTokenException 导致崩溃
+        val ref = WeakReference(activity)
         Thread {
             try {
                 val conn = URL(BuildConfig.UPDATE_URL).openConnection() as HttpURLConnection
@@ -29,8 +33,15 @@ object UpdateChecker {
                 val force = json.optBoolean("force", false)
                 val remoteName = json.optString("versionName", "")
                 val downloadUrl = json.optString("url", BuildConfig.UPDATE_URL)
-                activity.runOnUiThread {
-                    showDialog(activity, remoteName, force, downloadUrl)
+                val act = ref.get() ?: return@Thread
+                if (act.isFinishing || act.isDestroyed) return@Thread
+                act.runOnUiThread {
+                    // 弹窗前再次确认 Activity 仍存活，避免对已销毁窗口弹窗
+                    if (act.isFinishing || act.isDestroyed) return@runOnUiThread
+                    try {
+                        showDialog(act, remoteName, force, downloadUrl)
+                    } catch (_: Exception) {
+                    }
                 }
             } catch (_: Exception) {
             }
