@@ -24,6 +24,7 @@ object Prefs {
     const val ARRANGE_EIGHT = "eight"
 
     private const val KEY_DEFAULTS_APPLIED = "defaults_applied"
+    private const val KEY_RESET_V16 = "reset_v16"
 
     lateinit var sp: SharedPreferences
         private set
@@ -40,6 +41,13 @@ object Prefs {
             }
             isDefaultsApplied = true
         }
+        if (!isResetV16) {
+            if (isTablet(context)) {
+                spacingDp = 40
+                textSizeSp = 12
+            }
+            isResetV16 = true
+        }
     }
 
     fun isTablet(context: Context): Boolean =
@@ -48,6 +56,10 @@ object Prefs {
     private var isDefaultsApplied: Boolean
         get() = sp.getBoolean(KEY_DEFAULTS_APPLIED, false)
         set(v) = sp.edit().putBoolean(KEY_DEFAULTS_APPLIED, v).apply()
+
+    private var isResetV16: Boolean
+        get() = sp.getBoolean(KEY_RESET_V16, false)
+        set(v) = sp.edit().putBoolean(KEY_RESET_V16, v).apply()
 
     var enabled: Boolean
         get() = sp.getBoolean("enabled", true)

@@ -12,11 +12,8 @@ import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.view.Gravity
-import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.AbsoluteLayout
 import androidx.core.app.NotificationCompat
-import kotlin.math.max
 
 class OverlayService : Service() {
 
@@ -46,17 +43,16 @@ class OverlayService : Service() {
 
     private data class Label(
         val dir: String,
-        val view: CompassLabelView
+        val view: CompassLabelView,
+        val params: WindowManager.LayoutParams,
+        var startAllX: Int = 0,
+        var startAllY: Int = 0
     )
 
     private val labels = mutableListOf<Label>()
     private var wm: WindowManager? = null
-    private var container: AbsoluteLayout? = null
-    private var params: WindowManager.LayoutParams? = null
-    private var startContainerX = 0
-    private var startContainerY = 0
-    private var startChildX = 0
-    private var startChildY = 0
+    private var startX = 0
+    private var startY = 0
 
     override fun onCreate() {
         super.onCreate()
@@ -96,29 +92,12 @@ class OverlayService : Service() {
         val wm = getSystemService(WindowManager::class.java)
         this.wm = wm
 
-        val c = AbsoluteLayout(this)
-        c.setClipChildren(false)
-        c.setClipToPadding(false)
-        container = c
-
         val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
             @Suppress("DEPRECATION")
             WindowManager.LayoutParams.TYPE_PHONE
         }
-
-        val p = WindowManager.LayoutParams(
-            1, 1, type,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            PixelFormat.TRANSLUCENT
-        )
-        p.gravity = Gravity.TOP or Gravity.START
-        p.x = 0
-        p.y = 0
-        params = p
 
         val dirs = listOf(
             Prefs.DIR_NORTH to "北",
@@ -132,52 +111,90 @@ class OverlayService : Service() {
         )
         for ((dir, text) in dirs) {
             if (!Prefs.showDir(dir)) continue
-            addLabel(dir, text)
+            addLabel(wm, type, dir, text)
         }
-
-        try {
-            wm.addView(c, p)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        finalizeBounds()
     }
 
-    private fun addLabel(dir: String, text: String) {
+    private fun addLabel(wm: WindowManager, type: Int, dir: String, text: String) {
         val v = CompassLabelView(this)
         v.text = text
         v.applyStyle()
+        val p = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            type,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT
+        )
+        p.gravity = Gravity.TOP or Gravity.START
+        val screenX = Prefs.labelX(dir)
+        val screenY = Prefs.labelY(dir)
+        if (screenX >= 0 && screenY >= 0) {
+            p.x = screenX
+            p.y = screenY
+        } else {
+            val (ix, iy) = defaultCrossPos(dir)
+            p.x = ix
+            p.y = iy
+            Prefs.setLabelPos(dir, ix, iy)
+        }
+
+        val label = Label(dir, v, p)
         v.listener = object : CompassLabelView.Listener {
             override fun onDragStart() {
-                val p = params ?: return
-                val lv = v.layoutParams as AbsoluteLayout.LayoutParams
-                startContainerX = p.x
-                startContainerY = p.y
-                startChildX = lv.x
-                startChildY = lv.y
+                startX = label.params.x
+                startY = label.params.y
+                if (Prefs.groupMove) {
+                    labels.forEach { l ->
+                        l.startAllX = l.params.x
+                        l.startAllY = l.params.y
+                    }
+                }
             }
 
             override fun onDrag(dx: Int, dy: Int) {
-                val p = params ?: return
-                val w = wm ?: return
-                val c = container ?: return
                 if (Prefs.groupMove) {
-                    p.x = startContainerX + dx
-                    p.y = startContainerY + dy
+                    label.params.x = startX + dx
+                    label.params.y = startY + dy
                     try {
-                        w.updateViewLayout(c, p)
+                        wm?.updateViewLayout(label.view, label.params)
                     } catch (_: Exception) {
                     }
-                    return
+                    labels.forEach { l ->
+                        if (l.view !== label.view) {
+                            l.view.translationX = dx.toFloat()
+                            l.view.translationY = dy.toFloat()
+                        }
+                    }
+                } else {
+                    label.params.x = startX + dx
+                    label.params.y = startY + dy
+                    try {
+                        wm?.updateViewLayout(label.view, label.params)
+                    } catch (_: Exception) {
+                    }
                 }
-                dragSingle(v, p, dx, dy)
             }
 
             override fun onDragEnd() {
-                val p = params ?: return
+                if (Prefs.groupMove) {
+                    val ddx = label.params.x - startX
+                    val ddy = label.params.y - startY
+                    labels.forEach { l ->
+                        l.params.x = l.startAllX + ddx
+                        l.params.y = l.startAllY + ddy
+                        l.view.translationX = 0f
+                        l.view.translationY = 0f
+                        try {
+                            wm?.updateViewLayout(l.view, l.params)
+                        } catch (_: Exception) {
+                        }
+                    }
+                }
                 labels.forEach { l ->
-                    val lv = l.view.layoutParams as AbsoluteLayout.LayoutParams
-                    Prefs.setLabelPos(l.dir, p.x + lv.x, p.y + lv.y)
+                    Prefs.setLabelPos(l.dir, l.params.x, l.params.y)
                 }
             }
 
@@ -188,106 +205,11 @@ class OverlayService : Service() {
             }
         }
 
-        val screenX = Prefs.labelX(dir)
-        val screenY = Prefs.labelY(dir)
-        val (dx, dy) = if (screenX >= 0 && screenY >= 0) {
-            screenX to screenY
-        } else {
-            defaultCrossPos(dir).also { (ix, iy) -> Prefs.setLabelPos(dir, ix, iy) }
-        }
-        val lp = AbsoluteLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            dx,
-            dy
-        )
-        v.layoutParams = lp
-        container?.addView(v)
-        labels.add(Label(dir, v))
-    }
-
-    private fun dragSingle(v: CompassLabelView, p: WindowManager.LayoutParams, dx: Int, dy: Int) {
-        val w = wm ?: return
-        val c = container ?: return
-        var newX = startChildX + dx
-        var newY = startChildY + dy
-        var shiftX = 0
-        var shiftY = 0
-        if (newX < 0) {
-            shiftX = -newX
-            newX = 0
-        }
-        if (newY < 0) {
-            shiftY = -newY
-            newY = 0
-        }
-        if (shiftX != 0 || shiftY != 0) {
-            p.x -= shiftX
-            p.y -= shiftY
-            labels.forEach { l ->
-                val lv = l.view.layoutParams as AbsoluteLayout.LayoutParams
-                lv.x += shiftX
-                lv.y += shiftY
-            }
-            startChildX += shiftX
-            startChildY += shiftY
-            newX = startChildX + dx
-            newY = startChildY + dy
-        }
-        val lpv = v.layoutParams as AbsoluteLayout.LayoutParams
-        lpv.x = newX
-        lpv.y = newY
-        v.requestLayout()
-
-        var maxR = 0
-        var maxB = 0
-        labels.forEach { l ->
-            val lv = l.view.layoutParams as AbsoluteLayout.LayoutParams
-            maxR = max(maxR, lv.x + l.view.width)
-            maxB = max(maxB, lv.y + l.view.height)
-        }
-        val needResize = shiftX != 0 || shiftY != 0 || maxR > p.width || maxB > p.height
-        if (needResize) {
-            p.width = max(p.width, maxR)
-            p.height = max(p.height, maxB)
-            try {
-                w.updateViewLayout(c, p)
-            } catch (_: Exception) {
-            }
-        }
-    }
-
-    private fun finalizeBounds() {
-        val p = params ?: return
-        val w = wm ?: return
-        val c = container ?: return
-        if (labels.isEmpty()) return
-        var minX = Int.MAX_VALUE
-        var minY = Int.MAX_VALUE
-        var maxX = Int.MIN_VALUE
-        var maxY = Int.MIN_VALUE
-        labels.forEach { l ->
-            val lv = l.view.layoutParams as AbsoluteLayout.LayoutParams
-            val right = lv.x + l.view.width
-            val bottom = lv.y + l.view.height
-            if (lv.x < minX) minX = lv.x
-            if (lv.y < minY) minY = lv.y
-            if (right > maxX) maxX = right
-            if (bottom > maxY) maxY = bottom
-        }
-        p.x += minX
-        p.y += minY
-        labels.forEach { l ->
-            val lv = l.view.layoutParams as AbsoluteLayout.LayoutParams
-            lv.x -= minX
-            lv.y -= minY
-        }
-        container?.requestLayout()
-        p.width = maxX - minX
-        p.height = maxY - minY
+        labels.add(label)
         try {
-            w.updateViewLayout(c, p)
-        } catch (_: Exception) {
+            wm.addView(label.view, label.params)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -353,13 +275,12 @@ class OverlayService : Service() {
 
     private fun rebuildAll() {
         val w = wm ?: return
-        container?.let { c ->
+        labels.forEach { l ->
             try {
-                w.removeView(c)
+                w.removeView(l.view)
             } catch (_: Exception) {
             }
         }
-        container = null
         labels.clear()
         showOverlay()
     }
@@ -368,15 +289,13 @@ class OverlayService : Service() {
 
     override fun onDestroy() {
         instance = null
-        wm?.let { w ->
-            container?.let { c ->
-                try {
-                    w.removeView(c)
-                } catch (_: Exception) {
-                }
+        val w = wm
+        labels.forEach { l ->
+            try {
+                w?.removeView(l.view)
+            } catch (_: Exception) {
             }
         }
-        container = null
         labels.clear()
         super.onDestroy()
     }
