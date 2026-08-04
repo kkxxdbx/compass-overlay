@@ -74,10 +74,17 @@
 
 # Java
 *.class
-*.jar
 *.war
 *.ear
 **/.gradle/
+
+# Android
+**/local.properties
+*.jks
+*.keystore
+
+# Gradle wrapper jar must stay tracked
+!gradle/wrapper/gradle-wrapper.jar
 
 # C/C++/Go/Rust
 *.o
