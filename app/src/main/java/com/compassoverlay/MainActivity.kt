@@ -12,6 +12,7 @@ import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.materialswitch.MaterialSwitch
 
 class MainActivity : AppCompatActivity() {
@@ -23,6 +24,8 @@ class MainActivity : AppCompatActivity() {
 
     private val sizeMin: Int
         get() = if (Prefs.isTablet(this)) 12 else 10
+
+    private var syncingToggle = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,8 +48,7 @@ class MainActivity : AppCompatActivity() {
         val seekBgAlpha = findViewById<SeekBar>(R.id.seekBgAlpha)
         val seekSpacing = findViewById<SeekBar>(R.id.seekSpacing)
         val txtSpacing = findViewById<TextView>(R.id.txtSpacing)
-        val btnArrangeCross = findViewById<com.google.android.material.button.MaterialButton>(R.id.btnArrangeCross)
-        val btnArrangeEight = findViewById<com.google.android.material.button.MaterialButton>(R.id.btnArrangeEight)
+        val toggleArrange = findViewById<MaterialButtonToggleGroup>(R.id.toggleArrange)
 
         switchEnabled.setOnCheckedChangeListener { _, checked ->
             if (checked) {
@@ -128,16 +130,29 @@ class MainActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(bar: SeekBar) {}
         })
 
-        btnArrangeCross.setOnClickListener {
-            if (OverlayService.isRunning()) {
-                OverlayService.arrangeCross()
+        toggleArrange.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked || syncingToggle) return@addOnButtonCheckedListener
+            when (checkedId) {
+                R.id.btnArrangeCross -> if (OverlayService.isRunning()) {
+                    OverlayService.arrangeCross()
+                } else {
+                    Prefs.lastArrange = Prefs.ARRANGE_CROSS
+                    Prefs.setShowDir(Prefs.DIR_NORTHEAST, false)
+                    Prefs.setShowDir(Prefs.DIR_SOUTHEAST, false)
+                    Prefs.setShowDir(Prefs.DIR_NORTHWEST, false)
+                    Prefs.setShowDir(Prefs.DIR_SOUTHWEST, false)
+                }
+                R.id.btnArrangeEight -> if (OverlayService.isRunning()) {
+                    OverlayService.arrangeEight()
+                } else {
+                    Prefs.lastArrange = Prefs.ARRANGE_EIGHT
+                    Prefs.setShowDir(Prefs.DIR_NORTHEAST, true)
+                    Prefs.setShowDir(Prefs.DIR_SOUTHEAST, true)
+                    Prefs.setShowDir(Prefs.DIR_NORTHWEST, true)
+                    Prefs.setShowDir(Prefs.DIR_SOUTHWEST, true)
+                }
             }
-        }
-
-        btnArrangeEight.setOnClickListener {
-            if (OverlayService.isRunning()) {
-                OverlayService.arrangeEight()
-            }
+            syncUi()
         }
 
         buildColorRow()
@@ -194,6 +209,7 @@ class MainActivity : AppCompatActivity() {
         val seekBgAlpha = findViewById<SeekBar>(R.id.seekBgAlpha)
         val seekSpacing = findViewById<SeekBar>(R.id.seekSpacing)
         val txtSpacing = findViewById<TextView>(R.id.txtSpacing)
+        val toggleArrange = findViewById<MaterialButtonToggleGroup>(R.id.toggleArrange)
 
         switchEnabled.isChecked = OverlayService.isRunning()
         switchNorth.isChecked = Prefs.showNorth
@@ -214,6 +230,11 @@ class MainActivity : AppCompatActivity() {
         seekBgAlpha.isEnabled = Prefs.bgStyle == Prefs.BG_DARK
         seekSpacing.progress = Prefs.spacingDp
         txtSpacing.text = getString(R.string.spacing_value, Prefs.spacingDp)
+        syncingToggle = true
+        toggleArrange.check(
+            if (Prefs.lastArrange == Prefs.ARRANGE_CROSS) R.id.btnArrangeCross else R.id.btnArrangeEight
+        )
+        syncingToggle = false
     }
 
     private fun enableOverlay() {
