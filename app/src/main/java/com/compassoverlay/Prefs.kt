@@ -23,6 +23,8 @@ object Prefs {
     const val ARRANGE_CROSS = "cross"
     const val ARRANGE_EIGHT = "eight"
 
+    private const val KEY_DEFAULTS_APPLIED = "defaults_applied"
+
     lateinit var sp: SharedPreferences
         private set
 
@@ -30,7 +32,27 @@ object Prefs {
         if (!::sp.isInitialized) {
             sp = context.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
         }
+        if (!isDefaultsApplied) {
+            val isNewInstall = !sp.contains("spacing") && !sp.contains("text_size")
+            if (isNewInstall) {
+                if (isTablet(context)) {
+                    spacingDp = 80
+                    textSizeSp = 16
+                } else {
+                    spacingDp = 40
+                    textSizeSp = 12
+                }
+            }
+            isDefaultsApplied = true
+        }
     }
+
+    fun isTablet(context: Context): Boolean =
+        (context.resources.configuration.smallestScreenWidthDp ?: 0) >= 600
+
+    private var isDefaultsApplied: Boolean
+        get() = sp.getBoolean(KEY_DEFAULTS_APPLIED, false)
+        set(v) = sp.edit().putBoolean(KEY_DEFAULTS_APPLIED, v).apply()
 
     var enabled: Boolean
         get() = sp.getBoolean("enabled", true)
