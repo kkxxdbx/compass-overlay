@@ -83,10 +83,12 @@ class OverlayService : Service() {
                 dirty = false
                 val anchor = activeLabel
                 if (anchor != null) updatePos(anchor, currentDx, currentDy)
-                frameCount++
-                if (frameCount >= followInterval) {
-                    frameCount = 0
-                    labels.forEach { l -> if (l !== anchor) updatePos(l, currentDx, currentDy) }
+                if (Prefs.groupMove) {
+                    frameCount++
+                    if (frameCount >= followInterval) {
+                        frameCount = 0
+                        labels.forEach { l -> if (l !== anchor) updatePos(l, currentDx, currentDy) }
+                    }
                 }
             }
             Choreographer.getInstance().postFrameCallback(this)
@@ -210,7 +212,11 @@ class OverlayService : Service() {
 
             override fun onDragEnd() {
                 dragging = false
-                labels.forEach { l -> updatePos(l, currentDx, currentDy) }
+                if (Prefs.groupMove) {
+                    labels.forEach { l -> updatePos(l, currentDx, currentDy) }
+                } else {
+                    activeLabel?.let { l -> updatePos(l, currentDx, currentDy) }
+                }
                 activeLabel = null
                 labels.forEach { l ->
                     Prefs.setLabelPos(l.dir, l.params.x, l.params.y)

@@ -11,8 +11,8 @@ android {
         applicationId "com.compassoverlay"
         minSdk 26
         targetSdk 34
-        versionCode 14
-        versionName "1.13"
+        versionCode 15
+        versionName "1.14"
         buildConfigField "String", "UPDATE_URL", "\"https://8080-79eaae0f5c7dd70e.monkeycode-ai.online/version.json\""
         buildConfigField "String", "UMENG_APPKEY", "\"6a726557934d206f5852e511\""
         buildConfigField "String", "UMENG_CHANNEL", "\"github\""
