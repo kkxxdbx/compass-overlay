@@ -114,20 +114,26 @@ class MainActivity : AppCompatActivity() {
         seekSpacing.max = 180
         seekSpacing.progress = Prefs.spacingDp
         txtSpacing.text = getString(R.string.spacing_value, Prefs.spacingDp)
+        var spacingStart = Prefs.spacingDp
         seekSpacing.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar, progress: Int, fromUser: Boolean) {
                 val v = progress
                 txtSpacing.text = getString(R.string.spacing_value, v)
                 if (fromUser) {
                     Prefs.spacingDp = v
-                    if (OverlayService.isRunning()) {
-                        OverlayService.reArrange()
-                    }
                 }
             }
 
-            override fun onStartTrackingTouch(bar: SeekBar) {}
-            override fun onStopTrackingTouch(bar: SeekBar) {}
+            override fun onStartTrackingTouch(bar: SeekBar) {
+                spacingStart = Prefs.spacingDp
+            }
+
+            override fun onStopTrackingTouch(bar: SeekBar) {
+                val cur = Prefs.spacingDp
+                if (cur != spacingStart && OverlayService.isRunning()) {
+                    OverlayService.scaleSpacing(spacingStart, cur)
+                }
+            }
         })
 
         toggleArrange.addOnButtonCheckedListener { _, checkedId, isChecked ->
