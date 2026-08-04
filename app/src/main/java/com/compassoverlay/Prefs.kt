@@ -35,13 +35,8 @@ object Prefs {
         if (!isDefaultsApplied) {
             val isNewInstall = !sp.contains("spacing") && !sp.contains("text_size")
             if (isNewInstall) {
-                if (isTablet(context)) {
-                    spacingDp = 80
-                    textSizeSp = 16
-                } else {
-                    spacingDp = 40
-                    textSizeSp = 12
-                }
+                spacingDp = 40
+                textSizeSp = 12
             }
             isDefaultsApplied = true
         }
