@@ -11,6 +11,7 @@ import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
+import android.view.Choreographer
 import android.view.Gravity
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
@@ -53,6 +54,16 @@ class OverlayService : Service() {
     private var wm: WindowManager? = null
     private var startX = 0
     private var startY = 0
+    private var dragging = false
+    private var currentDx = 0
+    private var currentDy = 0
+    private val frameCallback = object : Choreographer.FrameCallback {
+        override fun doFrame(frameTimeNanos: Long) {
+            if (!dragging) return
+            applyFrame()
+            Choreographer.getInstance().postFrameCallback(this)
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -151,24 +162,17 @@ class OverlayService : Service() {
                         l.startAllX = l.params.x
                         l.startAllY = l.params.y
                     }
+                    dragging = true
+                    currentDx = 0
+                    currentDy = 0
+                    Choreographer.getInstance().postFrameCallback(frameCallback)
                 }
             }
 
             override fun onDrag(dx: Int, dy: Int) {
-                if (Prefs.groupMove) {
-                    label.params.x = startX + dx
-                    label.params.y = startY + dy
-                    try {
-                        wm?.updateViewLayout(label.view, label.params)
-                    } catch (_: Exception) {
-                    }
-                    labels.forEach { l ->
-                        if (l.view !== label.view) {
-                            l.view.translationX = dx.toFloat()
-                            l.view.translationY = dy.toFloat()
-                        }
-                    }
-                } else {
+                currentDx = dx
+                currentDy = dy
+                if (!Prefs.groupMove) {
                     label.params.x = startX + dx
                     label.params.y = startY + dy
                     try {
@@ -180,18 +184,8 @@ class OverlayService : Service() {
 
             override fun onDragEnd() {
                 if (Prefs.groupMove) {
-                    val ddx = label.params.x - startX
-                    val ddy = label.params.y - startY
-                    labels.forEach { l ->
-                        l.params.x = l.startAllX + ddx
-                        l.params.y = l.startAllY + ddy
-                        l.view.translationX = 0f
-                        l.view.translationY = 0f
-                        try {
-                            wm?.updateViewLayout(l.view, l.params)
-                        } catch (_: Exception) {
-                        }
-                    }
+                    dragging = false
+                    applyFrame()
                 }
                 labels.forEach { l ->
                     Prefs.setLabelPos(l.dir, l.params.x, l.params.y)
@@ -210,6 +204,18 @@ class OverlayService : Service() {
             wm.addView(label.view, label.params)
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    private fun applyFrame() {
+        val w = wm ?: return
+        labels.forEach { l ->
+            l.params.x = l.startAllX + currentDx
+            l.params.y = l.startAllY + currentDy
+            try {
+                w.updateViewLayout(l.view, l.params)
+            } catch (_: Exception) {
+            }
         }
     }
 
