@@ -1,0 +1,39 @@
+name: Bug 反馈
+description: 报告应用罗盘使用中遇到的问题
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: 应用版本
+      description: 设置页显示的方向罗盘版本号
+      placeholder: "例如 1.17"
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: 手机型号与系统版本
+      description: 例如 Pixel 7 / Android 14
+      placeholder: "例如 小米 14 / MIUI 15 (Android 14)"
+    validations:
+      required: true
+  - type: textarea
+    id: describe
+    attributes:
+      label: 问题描述
+      description: 发生了什么？期望行为与实际行为的差异
+      placeholder: 请尽量详细描述复现步骤
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: "1. 打开悬浮窗开关\n2. ..."
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / 截图（可选）
+      description: 如有崩溃日志或截图，请一并提供
