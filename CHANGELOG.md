@@ -2,6 +2,26 @@
 
 本文件记录每次发布的重要变更。版本遵循 [语义化版本](https://semver.org/lang/zh-CN/)（主.次.修订）。
 
+## [1.17] - 2026-08-13
+
+### 修复
+- 修复冷启动后服务被系统恢复（START_STICKY）时崩溃：`Prefs` 初始化移至 `App.onCreate` 兜底，不再依赖 MainActivity
+- 修复设置页每次返回都重复重建全部悬浮窗：`syncUi()` 统一用同步标志保护，避免程序化刷新触发 listener 导致重复 `rebuildAll` / 重复启动服务
+- 修复字号 / 背景透明度滑块拖动中反复重建窗口导致闪烁：拖动中仅刷新样式与窗口尺寸（`OverlayService.refreshStyle`），不再重建窗口
+- 修复间距缩放过小（隐藏方向字坐标不参与缩放）：`scaleSpacingInternal` 现在把隐藏字也纳入包围盒并同步缩放
+- 签名密码从 build.gradle 移出：改由 `keystore.properties`（已 gitignore）读取，避免公开仓库泄露
+- 更新检查源迁移到 GitHub raw 固定地址，不再依赖临时预览域名
+- `allowBackup` 关闭并补充 `dataExtractionRules`，默认不备份应用数据
+- 拖拽阈值改用系统标准 `ViewConfiguration.scaledTouchSlop`，适配高 DPI 设备
+- 一键十字 / 八方在服务运行时增加确认提示，防止误触覆盖手动摆放的位置
+
+### 新增
+- 深色模式适配（DayNight 主题 + values-night 配色）
+- 设置页所有文案提取为字符串资源，方便后续国际化
+- 字号 / 不透明度滑块实时显示当前数值
+- 罗盘几何计算抽离为纯函数 `CompassGeometry` 并补充单元测试
+- GitHub Actions 持续集成：push / PR 自动跑测试、lint、构建 debug APK，打 tag 自动构建签名 release 并发布
+
 ## [1.16] - 2026-08-04
 
 ### 修复

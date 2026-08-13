@@ -8,6 +8,12 @@
 
 **CompassOverlay is an Android floating-window compass tool that pins the eight directions (North / South / West / East / NE / NW / SE / SW) on top of any game, with drag-and-drop positioning and adjustable spacing.**
 
+![Version](https://img.shields.io/badge/version-1.17-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Android](https://img.shields.io/badge/Android-8.0+-informational)
+![Kotlin](https://img.shields.io/badge/Kotlin-1.9.24-purple)
+[![CI](https://img.shields.io/github/actions/workflow/status/kkxxdbx/compass-overlay/android.yml?label=CI)](https://github.com/kkxxdbx/compass-overlay/actions)
+
 [English](#english) · [中文](#chinese)
 
 </div>
@@ -27,20 +33,22 @@
 ### 功能特性
 
 - **八方向显示**：上北、下南、左西、右东、东北、东南、西北、西南，与原神小地图方位一致
-- **十字 / 八方双模式**：十字模式自动隐藏四斜角字、界面更清爽；八方模式全部显示
+- **十字 / 八方双模式**：十字模式自动隐藏四斜角字、界面更清爽；八方模式全部显示（服务运行时切换会先确认，避免覆盖手动布局）
 - **自由拖拽**：长按单个方向字可单独拖动，默认开启「整体移动」后拖任一字可整体平移，松手自动保存位置
 - **间距实时可调**：滑块调整字间距，松手自动按中心缩放并保留手动拖过的位置
-- **字号 / 颜色 / 背景可调**：字号 12~40sp、7 种预设颜色、可选深色圆角背景及背景不透明度
+- **字号 / 颜色 / 背景可调**：字号 10~40sp、7 种预设颜色、可选深色圆角背景及背景不透明度
 - **刷新率自适应**：自动识别手机/平板刷新率（60/120/144Hz 等）调整更新频率，锚点字每帧跟手、其余字按比例节流，占用低
 - **不拦截触摸**：每个方向字独立小窗，空白区域不遮挡触摸，游戏操作不受影响
 - **屏幕适配**：横竖屏切换自动夹回屏幕内，平板 / 手机自适应默认间距与字号
+- **深色模式**：设置页跟随系统深浅色主题
 - **自动更新检查**：启动时静默检查新版本，可提示或强制更新
 
 ### 演示截图
 
-> 截图占位：请将你的设置界面截图与游戏内悬浮效果图分别命名为 `screenshots/settings.png`、`screenshots/game.png` 放入本仓库 `screenshots/` 目录后展示。
+> 下方为示意图（由脚本生成，用于占位），欢迎将你的真实运行截图 PR 到本仓库替换。
 
 ![设置界面](screenshots/settings.png)
+
 ![游戏悬浮效果](screenshots/game.png)
 
 ### 安装使用
@@ -51,8 +59,6 @@
 2. 手机上点击安装；若提示「未知来源」，允许后继续
 3. 首次打开点击「悬浮窗开关」，在弹出的系统授权中允许「显示在其他应用上层」
 4. 回到游戏，把方向罗盘拖到小地图旁边即可
-
-> 也可直接访问在线下载页：https://8080-79eaae0f5c7dd70e.monkeycode-ai.online
 
 #### 方式二：源码本地编译
 
@@ -66,6 +72,8 @@
 ./gradlew assembleRelease
 ```
 
+release 包使用 `keystore.properties` 读取签名信息，模板见 [`keystore.properties.example`](keystore.properties.example)。未配置时自动回退为 debug 签名，仅用于本地测试。
+
 ### 权限说明
 
 | 权限 | 用途 |
@@ -75,6 +83,8 @@
 | 网络（INTERNET） | 仅启动时静默查询一次更新信息（version.json），**不上传任何数据** |
 
 **不收集任何用户数据，无广告，无埋点，无任何形式的隐私采集。**
+
+> 历史说明：v1.12–v1.13 曾短暂接入友盟统计，v1.15 已移除相关代码与依赖，此后不再上报任何数据。
 
 ### 风险提示
 
@@ -89,9 +99,10 @@ app/src/main/java/com/compassoverlay/
 ├── MainActivity.kt        设置页
 ├── OverlayService.kt      前台服务 + 悬浮窗多窗口管理 + 帧合并拖动
 ├── CompassOverlayView.kt  方向字视图（拖拽手势、共享背景）
+├── CompassGeometry.kt     罗盘布局几何计算（纯函数，可单测）
 ├── Prefs.kt               设置存取（SharedPreferences 封装）
 ├── UpdateChecker.kt       启动时静默检查新版本
-└── App.kt                 应用入口
+└── App.kt                 应用入口（兜底初始化设置）
 ```
 
 ### 环境依赖
@@ -100,6 +111,10 @@ app/src/main/java/com/compassoverlay/
 - JDK 17
 - Android SDK：compileSdk 34 / targetSdk 34 / minSdk 26
 - Kotlin + 原生 View（无第三方运行时依赖）
+
+### 持续集成
+
+GitHub Actions 会在每次 push / PR 自动运行单元测试、Lint 并构建 debug APK；推送 `v*` 标签时自动构建签名 release 并发布 Release（需在仓库 Secrets 中配置 `KEYSTORE_BASE64`、`STORE_PASSWORD`、`KEY_ALIAS`、`KEY_PASSWORD`）。
 
 ### 开源协议
 
@@ -129,9 +144,10 @@ Instead of relying on sensors, the compass uses a **static fixed orientation** (
 
 - 8 direction labels with a clean cross-mode (4 diagonal labels auto-hidden)
 - Drag any label individually, or move the whole compass with one gesture
-- Adjustable spacing, font size (12–40sp), 7 preset colors, optional dark rounded background
+- Adjustable spacing, font size (10–40sp), 7 preset colors, optional dark rounded background
 - Refresh-rate adaptive updates (60 / 120 / 144 Hz) for low overhead
 - Independent per-label windows: no touch blocking, no clipping
+- Day/Night theme support
 - Auto-update check on launch
 
 ### Installation
@@ -148,6 +164,8 @@ Requires JDK 17 + Android SDK (compileSdk 34). Open the folder in Android Studio
 ./gradlew assembleDebug   # debug APK
 ./gradlew assembleRelease # release APK
 ```
+
+Release signing reads `keystore.properties` (see [`keystore.properties.example`](keystore.properties.example)). It falls back to debug signing when not configured.
 
 ### Permissions & Privacy
 
