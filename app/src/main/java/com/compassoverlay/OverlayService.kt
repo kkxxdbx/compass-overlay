@@ -62,6 +62,11 @@ class OverlayService : Service() {
         fun scaleSpacing(oldGap: Int, newGap: Int) {
             instance?.scaleSpacingInternal(oldGap, newGap)
         }
+
+        /** 仅刷新样式与窗口尺寸，不重建窗口（滑块拖动中调用，避免闪烁） */
+        fun refreshStyle() {
+            instance?.refreshStyleInternal()
+        }
     }
 
     /**
@@ -139,11 +144,9 @@ class OverlayService : Service() {
     private fun startForegroundWithNotification() {
         val channelId = "compass_overlay"
         val nm = getSystemService(NotificationManager::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            nm.createNotificationChannel(
-                NotificationChannel(channelId, getString(R.string.app_name), NotificationManager.IMPORTANCE_LOW)
-            )
-        }
+        nm.createNotificationChannel(
+            NotificationChannel(channelId, getString(R.string.app_name), NotificationManager.IMPORTANCE_LOW)
+        )
         val pi = PendingIntent.getActivity(
             this, 0, Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -176,13 +179,8 @@ class OverlayService : Service() {
         val wm = getSystemService(WindowManager::class.java)
         this.wm = wm
 
-        // Android 8.0+ 必须使用 TYPE_APPLICATION_OVERLAY
-        val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-        } else {
-            @Suppress("DEPRECATION")
-            WindowManager.LayoutParams.TYPE_PHONE
-        }
+        // Android 8.0+（minSdk 26）必须使用 TYPE_APPLICATION_OVERLAY
+        val type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
 
         val dirs = listOf(
             Prefs.DIR_NORTH to getString(R.string.dir_north),
@@ -310,62 +308,46 @@ class OverlayService : Service() {
         val dm = resources.displayMetrics
         val gap = (Prefs.spacingDp * dm.density).toInt()
         val diag = (gap / 1.414).toInt()
-        val labelSize = (Prefs.textSizeSp * dm.density * 1.5f).toInt()
-        val cx = ((dm.widthPixels - labelSize) / 2).toInt()
-        val cy = ((dm.heightPixels - labelSize) / 2).toInt()
-        return when (dir) {
-            Prefs.DIR_NORTH -> cx to (cy - gap)
-            Prefs.DIR_SOUTH -> cx to (cy + gap)
-            Prefs.DIR_WEST -> (cx - gap) to cy
-            Prefs.DIR_EAST -> (cx + gap) to cy
-            Prefs.DIR_NORTHEAST -> (cx + diag) to (cy - diag)
-            Prefs.DIR_SOUTHEAST -> (cx + diag) to (cy + diag)
-            Prefs.DIR_NORTHWEST -> (cx - diag) to (cy - diag)
-            Prefs.DIR_SOUTHWEST -> (cx - diag) to (cy + diag)
-            else -> cx to cy
-        }
+        val size = CompassGeometry.labelSize(Prefs.textSizeSp, dm.density)
+        return CompassGeometry.defaultCrossPos(dir, dm.widthPixels, dm.heightPixels, gap, diag, size)
     }
 
     /** 十字模式：隐藏四个斜对角方向字，只保留上下左右，并重排 */
     fun arrangeCross() {
         Prefs.lastArrange = Prefs.ARRANGE_CROSS
-        Prefs.setShowDir(Prefs.DIR_NORTHEAST, false)
-        Prefs.setShowDir(Prefs.DIR_SOUTHEAST, false)
-        Prefs.setShowDir(Prefs.DIR_NORTHWEST, false)
-        Prefs.setShowDir(Prefs.DIR_SOUTHWEST, false)
-        val dm = resources.displayMetrics
-        val gap = (Prefs.spacingDp * dm.density).toInt()
-        val labelSize = (Prefs.textSizeSp * dm.density * 1.5f).toInt()
-        val cx = ((dm.widthPixels - labelSize) / 2).toInt()
-        val cy = ((dm.heightPixels - labelSize) / 2).toInt()
-        Prefs.setLabelPos(Prefs.DIR_NORTH, cx, cy - gap)
-        Prefs.setLabelPos(Prefs.DIR_SOUTH, cx, cy + gap)
-        Prefs.setLabelPos(Prefs.DIR_WEST, cx - gap, cy)
-        Prefs.setLabelPos(Prefs.DIR_EAST, cx + gap, cy)
+        setDiagonalsVisible(false)
+        applyCenteredPositions(diagonalsVisible = false)
         rebuildAll()
     }
 
     fun arrangeEight() {
         Prefs.lastArrange = Prefs.ARRANGE_EIGHT
-        Prefs.setShowDir(Prefs.DIR_NORTHEAST, true)
-        Prefs.setShowDir(Prefs.DIR_SOUTHEAST, true)
-        Prefs.setShowDir(Prefs.DIR_NORTHWEST, true)
-        Prefs.setShowDir(Prefs.DIR_SOUTHWEST, true)
+        setDiagonalsVisible(true)
+        applyCenteredPositions(diagonalsVisible = true)
+        rebuildAll()
+    }
+
+    /** 仅设置斜角字的显示/隐藏，不改动任何坐标 */
+    private fun setDiagonalsVisible(visible: Boolean) {
+        Prefs.setShowDir(Prefs.DIR_NORTHEAST, visible)
+        Prefs.setShowDir(Prefs.DIR_SOUTHEAST, visible)
+        Prefs.setShowDir(Prefs.DIR_NORTHWEST, visible)
+        Prefs.setShowDir(Prefs.DIR_SOUTHWEST, visible)
+    }
+
+    /** 把所有方向字的位置重置到屏幕中心十字 */
+    private fun applyCenteredPositions(diagonalsVisible: Boolean) {
         val dm = resources.displayMetrics
         val gap = (Prefs.spacingDp * dm.density).toInt()
         val diag = (gap / 1.414).toInt()
-        val labelSize = (Prefs.textSizeSp * dm.density * 1.5f).toInt()
-        val cx = ((dm.widthPixels - labelSize) / 2).toInt()
-        val cy = ((dm.heightPixels - labelSize) / 2).toInt()
-        Prefs.setLabelPos(Prefs.DIR_NORTH, cx, cy - gap)
-        Prefs.setLabelPos(Prefs.DIR_SOUTH, cx, cy + gap)
-        Prefs.setLabelPos(Prefs.DIR_WEST, cx - gap, cy)
-        Prefs.setLabelPos(Prefs.DIR_EAST, cx + gap, cy)
-        Prefs.setLabelPos(Prefs.DIR_NORTHEAST, cx + diag, cy - diag)
-        Prefs.setLabelPos(Prefs.DIR_SOUTHEAST, cx + diag, cy + diag)
-        Prefs.setLabelPos(Prefs.DIR_NORTHWEST, cx - diag, cy - diag)
-        Prefs.setLabelPos(Prefs.DIR_SOUTHWEST, cx - diag, cy + diag)
-        rebuildAll()
+        val size = CompassGeometry.labelSize(Prefs.textSizeSp, dm.density)
+        val dirs = if (diagonalsVisible) Prefs.ALL_DIRS else Prefs.ALL_DIRS.take(4)
+        dirs.forEach { dir ->
+            val (x, y) = CompassGeometry.defaultCrossPos(
+                dir, dm.widthPixels, dm.heightPixels, gap, diag, size
+            )
+            Prefs.setLabelPos(dir, x, y)
+        }
     }
 
     fun applyArrange() {
@@ -376,32 +358,43 @@ class OverlayService : Service() {
     }
 
     /**
-     * 间距缩放：以当前全部标签的包围盒中心为原点，按新间距/旧间距
-     * 比例等比放大或缩小各标签位置，保留用户手动拖过的相对布局。
+     * 间距缩放：以当前全部方向字（含被隐藏的字）的包围盒中心为原点，
+     * 按新间距/旧间距比例等比缩放各标签位置，保留用户手动拖过的相对布局。
      */
     private fun scaleSpacingInternal(oldGap: Int, newGap: Int) {
         if (oldGap <= 0 || newGap == oldGap) return
-        if (labels.isEmpty()) return
-        val k = newGap.toFloat() / oldGap
-        // 计算包围盒
-        var minX = Int.MAX_VALUE
-        var minY = Int.MAX_VALUE
-        var maxX = Int.MIN_VALUE
-        var maxY = Int.MIN_VALUE
-        labels.forEach { l ->
-            if (l.params.x < minX) minX = l.params.x
-            if (l.params.y < minY) minY = l.params.y
-            if (l.params.x > maxX) maxX = l.params.x
-            if (l.params.y > maxY) maxY = l.params.y
+        // 收集全部 8 个方向的坐标：显示的取窗口实时位置，隐藏的取保存位置
+        val points = mutableMapOf<String, Pair<Int, Int>>()
+        labels.forEach { l -> points[l.dir] = l.params.x to l.params.y }
+        Prefs.ALL_DIRS.forEach { dir ->
+            if (!points.containsKey(dir)) {
+                val x = Prefs.labelX(dir)
+                val y = Prefs.labelY(dir)
+                if (x >= 0 && y >= 0) points[dir] = x to y
+            }
         }
-        val centerX = (minX + maxX) / 2f
-        val centerY = (minY + maxY) / 2f
+        if (points.isEmpty()) return
+        val k = newGap.toFloat() / oldGap
+        val scaled = CompassGeometry.scaleSpacing(points.values.toList(), k)
+        points.keys.zip(scaled).forEach { (dir, p) ->
+            val nx = p.first
+            val ny = p.second
+            Prefs.setLabelPos(dir, nx, ny)
+            labels.find { it.dir == dir }?.let { l ->
+                l.params.x = nx
+                l.params.y = ny
+                try {
+                    wm?.updateViewLayout(l.view, l.params)
+                } catch (_: Exception) {
+                }
+            }
+        }
+    }
+
+    /** 刷新每个方向字的样式与窗口尺寸，不重建窗口（滑块拖动中调用） */
+    private fun refreshStyleInternal() {
         labels.forEach { l ->
-            val nx = (centerX + (l.params.x - centerX) * k).toInt()
-            val ny = (centerY + (l.params.y - centerY) * k).toInt()
-            l.params.x = nx
-            l.params.y = ny
-            Prefs.setLabelPos(l.dir, nx, ny)
+            l.view.applyStyle()
             try {
                 wm?.updateViewLayout(l.view, l.params)
             } catch (_: Exception) {

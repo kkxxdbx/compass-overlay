@@ -6,8 +6,9 @@ import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.MotionEvent
+import android.view.ViewConfiguration
 import android.graphics.Typeface
-import android.widget.TextView
+import androidx.appcompat.widget.AppCompatTextView
 
 /**
  * 单个方向字的悬浮窗视图（TextView 子类）。
@@ -24,7 +25,7 @@ import android.widget.TextView
 class CompassLabelView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
-) : TextView(context, attrs) {
+) : AppCompatTextView(context, attrs) {
 
     companion object {
         private var sharedBg: GradientDrawable? = null
@@ -47,8 +48,9 @@ class CompassLabelView @JvmOverloads constructor(
     /** 是否已判定为拖拽（超过触摸阈值） */
     private var moved = false
 
-    /** 触摸阈值：位移超过此值才算拖拽，否则按点击处理 */
-    private val touchSlop = 8f
+    /** 触摸阈值：位移超过此值才算拖拽，否则按点击处理。
+     *  使用系统标准阈值，适配不同屏幕密度与无障碍设置。 */
+    private val touchSlop: Float = ViewConfiguration.get(context).scaledTouchSlop.toFloat()
 
     init {
         gravity = Gravity.CENTER

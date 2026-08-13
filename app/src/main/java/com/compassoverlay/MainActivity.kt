@@ -1,9 +1,9 @@
 package com.compassoverlay
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
@@ -53,6 +53,7 @@ class MainActivity : AppCompatActivity() {
         val toggleArrange = findViewById<MaterialButtonToggleGroup>(R.id.toggleArrange)
 
         switchEnabled.setOnCheckedChangeListener { _, checked ->
+            if (syncingToggle) return@setOnCheckedChangeListener
             if (checked) {
                 enableOverlay()
             } else {
@@ -60,25 +61,52 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        switchNorth.setOnCheckedChangeListener { _, c -> onDirToggled(Prefs.DIR_NORTH, c) }
-        switchSouth.setOnCheckedChangeListener { _, c -> onDirToggled(Prefs.DIR_SOUTH, c) }
-        switchWest.setOnCheckedChangeListener { _, c -> onDirToggled(Prefs.DIR_WEST, c) }
-        switchEast.setOnCheckedChangeListener { _, c -> onDirToggled(Prefs.DIR_EAST, c) }
-        switchNE.setOnCheckedChangeListener { _, c -> onDirToggled(Prefs.DIR_NORTHEAST, c) }
-        switchSE.setOnCheckedChangeListener { _, c -> onDirToggled(Prefs.DIR_SOUTHEAST, c) }
-        switchNW.setOnCheckedChangeListener { _, c -> onDirToggled(Prefs.DIR_NORTHWEST, c) }
-        switchSW.setOnCheckedChangeListener { _, c -> onDirToggled(Prefs.DIR_SOUTHWEST, c) }
+        switchNorth.setOnCheckedChangeListener { _, c ->
+            if (syncingToggle) return@setOnCheckedChangeListener
+            onDirToggled(Prefs.DIR_NORTH, c)
+        }
+        switchSouth.setOnCheckedChangeListener { _, c ->
+            if (syncingToggle) return@setOnCheckedChangeListener
+            onDirToggled(Prefs.DIR_SOUTH, c)
+        }
+        switchWest.setOnCheckedChangeListener { _, c ->
+            if (syncingToggle) return@setOnCheckedChangeListener
+            onDirToggled(Prefs.DIR_WEST, c)
+        }
+        switchEast.setOnCheckedChangeListener { _, c ->
+            if (syncingToggle) return@setOnCheckedChangeListener
+            onDirToggled(Prefs.DIR_EAST, c)
+        }
+        switchNE.setOnCheckedChangeListener { _, c ->
+            if (syncingToggle) return@setOnCheckedChangeListener
+            onDirToggled(Prefs.DIR_NORTHEAST, c)
+        }
+        switchSE.setOnCheckedChangeListener { _, c ->
+            if (syncingToggle) return@setOnCheckedChangeListener
+            onDirToggled(Prefs.DIR_SOUTHEAST, c)
+        }
+        switchNW.setOnCheckedChangeListener { _, c ->
+            if (syncingToggle) return@setOnCheckedChangeListener
+            onDirToggled(Prefs.DIR_NORTHWEST, c)
+        }
+        switchSW.setOnCheckedChangeListener { _, c ->
+            if (syncingToggle) return@setOnCheckedChangeListener
+            onDirToggled(Prefs.DIR_SOUTHWEST, c)
+        }
 
         switchBold.setOnCheckedChangeListener { _, checked ->
+            if (syncingToggle) return@setOnCheckedChangeListener
             Prefs.bold = checked
             applyAndRefresh()
         }
 
         switchGroupMove.setOnCheckedChangeListener { _, checked ->
+            if (syncingToggle) return@setOnCheckedChangeListener
             Prefs.groupMove = checked
         }
 
         radioBg.setOnCheckedChangeListener { _, id ->
+            if (syncingToggle) return@setOnCheckedChangeListener
             Prefs.bgStyle = if (id == R.id.radioBgNone) Prefs.BG_NONE else Prefs.BG_DARK
             seekBgAlpha.isEnabled = Prefs.bgStyle == Prefs.BG_DARK
             applyAndRefresh()
@@ -87,11 +115,15 @@ class MainActivity : AppCompatActivity() {
         seekSize.min = sizeMin
         seekSize.max = 40
         seekSize.progress = Prefs.textSizeSp
+        val txtSize = findViewById<TextView>(R.id.txtSize)
+        txtSize.text = getString(R.string.setting_size_value, Prefs.textSizeSp)
         seekSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
                     Prefs.textSizeSp = progress
-                    applyAndRefresh()
+                    txtSize.text = getString(R.string.setting_size_value, progress)
+                    // 拖动中只刷新样式与窗口尺寸，不重建窗口，避免闪烁
+                    OverlayService.refreshStyle()
                 }
             }
 
@@ -100,11 +132,14 @@ class MainActivity : AppCompatActivity() {
         })
 
         seekBgAlpha.progress = Prefs.bgAlpha
+        val txtAlpha = findViewById<TextView>(R.id.txtAlpha)
+        txtAlpha.text = getString(R.string.setting_bg_alpha_value, Prefs.bgAlpha)
         seekBgAlpha.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
                     Prefs.bgAlpha = progress
-                    applyAndRefresh()
+                    txtAlpha.text = getString(R.string.setting_bg_alpha_value, progress)
+                    OverlayService.refreshStyle()
                 }
             }
 
@@ -142,25 +177,21 @@ class MainActivity : AppCompatActivity() {
             if (!isChecked || syncingToggle) return@addOnButtonCheckedListener
             when (checkedId) {
                 R.id.btnArrangeCross -> if (OverlayService.isRunning()) {
-                    OverlayService.arrangeCross()
+                    // 服务运行时会重置所有位置，先确认避免误触覆盖手动布局
+                    confirmRearrange(Prefs.ARRANGE_CROSS)
                 } else {
                     Prefs.lastArrange = Prefs.ARRANGE_CROSS
-                    Prefs.setShowDir(Prefs.DIR_NORTHEAST, false)
-                    Prefs.setShowDir(Prefs.DIR_SOUTHEAST, false)
-                    Prefs.setShowDir(Prefs.DIR_NORTHWEST, false)
-                    Prefs.setShowDir(Prefs.DIR_SOUTHWEST, false)
+                    setDiagonalsVisible(false)
+                    syncUi()
                 }
                 R.id.btnArrangeEight -> if (OverlayService.isRunning()) {
-                    OverlayService.arrangeEight()
+                    confirmRearrange(Prefs.ARRANGE_EIGHT)
                 } else {
                     Prefs.lastArrange = Prefs.ARRANGE_EIGHT
-                    Prefs.setShowDir(Prefs.DIR_NORTHEAST, true)
-                    Prefs.setShowDir(Prefs.DIR_SOUTHEAST, true)
-                    Prefs.setShowDir(Prefs.DIR_NORTHWEST, true)
-                    Prefs.setShowDir(Prefs.DIR_SOUTHWEST, true)
+                    setDiagonalsVisible(true)
+                    syncUi()
                 }
             }
-            syncUi()
         }
 
         buildColorRow()
@@ -169,25 +200,52 @@ class MainActivity : AppCompatActivity() {
         promptBatteryOptimization()
     }
 
+    /** 仅设置斜角方向字的显示/隐藏（不移动任何位置） */
+    private fun setDiagonalsVisible(visible: Boolean) {
+        Prefs.setShowDir(Prefs.DIR_NORTHEAST, visible)
+        Prefs.setShowDir(Prefs.DIR_SOUTHEAST, visible)
+        Prefs.setShowDir(Prefs.DIR_NORTHWEST, visible)
+        Prefs.setShowDir(Prefs.DIR_SOUTHWEST, visible)
+    }
+
+    /** 一键重排前弹出确认，防止覆盖用户手动摆放的位置 */
+    private fun confirmRearrange(mode: String) {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.rearrange_title))
+            .setMessage(getString(R.string.rearrange_message))
+            .setPositiveButton(getString(R.string.rearrange_confirm)) { _, _ ->
+                if (mode == Prefs.ARRANGE_CROSS) OverlayService.arrangeCross()
+                else OverlayService.arrangeEight()
+                syncUi()
+            }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .setOnDismissListener { syncUi() }
+            .show()
+    }
+
     /**
      * 首次进入提示加入电池优化白名单（系统标准的「后台运行」权限）。
      * 未加入时悬浮窗服务容易被系统（尤其 MIUI）清理导致消失，引导用户开启。
+     *
+     * 本工具属于「悬浮窗常驻」类型应用，官方文档认可白名单用途；
+     * 该权限仅作为引导，App 不依赖其运行。
      */
+    @SuppressLint("BatteryLife")
     private fun promptBatteryOptimization() {
         if (Prefs.batteryPrompted) return
         Prefs.batteryPrompted = true
         val pm = getSystemService(PowerManager::class.java)
         if (pm.isIgnoringBatteryOptimizations(packageName)) return
         AlertDialog.Builder(this)
-            .setTitle("允许后台运行")
-            .setMessage("为保证悬浮窗在后台长期稳定显示、不被系统清理，建议允许「后台运行」（省电策略设为无限制）。\n\n该权限仅用于防止服务被系统回收，不会影响正常使用。")
-            .setPositiveButton("去开启") { _, _ ->
+            .setTitle(getString(R.string.battery_title))
+            .setMessage(getString(R.string.battery_message))
+            .setPositiveButton(getString(R.string.battery_go)) { _, _ ->
                 try {
                     startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName")))
                 } catch (_: Exception) {
                 }
             }
-            .setNegativeButton("暂不", null)
+            .setNegativeButton(getString(R.string.battery_later), null)
             .show()
     }
 
@@ -241,17 +299,21 @@ class MainActivity : AppCompatActivity() {
         val seekBgAlpha = findViewById<SeekBar>(R.id.seekBgAlpha)
         val seekSpacing = findViewById<SeekBar>(R.id.seekSpacing)
         val txtSpacing = findViewById<TextView>(R.id.txtSpacing)
+        val txtSize = findViewById<TextView>(R.id.txtSize)
+        val txtAlpha = findViewById<TextView>(R.id.txtAlpha)
         val toggleArrange = findViewById<MaterialButtonToggleGroup>(R.id.toggleArrange)
 
+        // 程序化刷新控件状态时不触发各 listener 的回调，避免重复重建窗口
+        syncingToggle = true
         switchEnabled.isChecked = OverlayService.isRunning()
-        switchNorth.isChecked = Prefs.showNorth
-        switchSouth.isChecked = Prefs.showSouth
-        switchWest.isChecked = Prefs.showWest
-        switchEast.isChecked = Prefs.showEast
-        switchNE.isChecked = Prefs.showNortheast
-        switchSE.isChecked = Prefs.showSoutheast
-        switchNW.isChecked = Prefs.showNorthwest
-        switchSW.isChecked = Prefs.showSouthwest
+        switchNorth.isChecked = Prefs.showDir(Prefs.DIR_NORTH)
+        switchSouth.isChecked = Prefs.showDir(Prefs.DIR_SOUTH)
+        switchWest.isChecked = Prefs.showDir(Prefs.DIR_WEST)
+        switchEast.isChecked = Prefs.showDir(Prefs.DIR_EAST)
+        switchNE.isChecked = Prefs.showDir(Prefs.DIR_NORTHEAST)
+        switchSE.isChecked = Prefs.showDir(Prefs.DIR_SOUTHEAST)
+        switchNW.isChecked = Prefs.showDir(Prefs.DIR_NORTHWEST)
+        switchSW.isChecked = Prefs.showDir(Prefs.DIR_SOUTHWEST)
         switchBold.isChecked = Prefs.bold
         switchGroupMove.isChecked = Prefs.groupMove
         radioBg.check(if (Prefs.bgStyle == Prefs.BG_DARK) R.id.radioBgDark else R.id.radioBgNone)
@@ -262,7 +324,8 @@ class MainActivity : AppCompatActivity() {
         seekBgAlpha.isEnabled = Prefs.bgStyle == Prefs.BG_DARK
         seekSpacing.progress = Prefs.spacingDp
         txtSpacing.text = getString(R.string.spacing_value, Prefs.spacingDp)
-        syncingToggle = true
+        txtSize.text = getString(R.string.setting_size_value, Prefs.textSizeSp)
+        txtAlpha.text = getString(R.string.setting_bg_alpha_value, Prefs.bgAlpha)
         toggleArrange.check(
             if (Prefs.lastArrange == Prefs.ARRANGE_CROSS) R.id.btnArrangeCross else R.id.btnArrangeEight
         )
@@ -270,7 +333,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun enableOverlay() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+        if (!Settings.canDrawOverlays(this)) {
             val intent = Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.parse("package:$packageName")
@@ -282,16 +345,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startOverlayService() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(Intent(this, OverlayService::class.java))
-        } else {
-            startService(Intent(this, OverlayService::class.java))
-        }
+        startForegroundService(Intent(this, OverlayService::class.java))
     }
 
+    /** 样式类设置变更：仅刷新悬浮窗样式与尺寸，不重建窗口 */
     private fun applyAndRefresh() {
         if (OverlayService.isRunning()) {
-            OverlayService.refresh()
+            OverlayService.refreshStyle()
         }
     }
 

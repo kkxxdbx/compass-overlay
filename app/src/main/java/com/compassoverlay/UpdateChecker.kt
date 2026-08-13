@@ -50,11 +50,13 @@ object UpdateChecker {
 
     private fun showDialog(activity: Activity, remoteName: String, force: Boolean, downloadUrl: String) {
         val dialog = AlertDialog.Builder(activity)
-            .setTitle("发现新版本")
-            .setMessage("当前版本 ${BuildConfig.VERSION_NAME}，新版本 ${remoteName} 已发布，建议更新。")
+            .setTitle(activity.getString(R.string.update_title))
+            .setMessage(activity.getString(R.string.update_message, BuildConfig.VERSION_NAME, remoteName))
             .setCancelable(!force)
-            .setNegativeButton(if (force) "退出" else "暂不更新") { d, _ -> d.dismiss() }
-            .setPositiveButton("立即更新") { _, _ -> openDownload(activity, downloadUrl) }
+            .setNegativeButton(
+                if (force) activity.getString(R.string.update_exit) else activity.getString(R.string.update_later)
+            ) { d, _ -> d.dismiss() }
+            .setPositiveButton(activity.getString(R.string.update_now)) { _, _ -> openDownload(activity, downloadUrl) }
             .create()
         dialog.setOnDismissListener { if (force && !dialog.isShowing) activity.finish() }
         dialog.show()

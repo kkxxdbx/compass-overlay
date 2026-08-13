@@ -110,60 +110,15 @@ object Prefs {
         sp.edit().putInt("${dir}_x", x).putInt("${dir}_y", y).apply()
     }
 
-    var showNorth: Boolean
-        get() = sp.getBoolean("show_north", true)
-        set(v) = sp.edit().putBoolean("show_north", v).apply()
+    /** 全部 8 个方向常量，用于通用遍历 */
+    val ALL_DIRS = listOf(
+        DIR_NORTH, DIR_SOUTH, DIR_WEST, DIR_EAST,
+        DIR_NORTHEAST, DIR_SOUTHEAST, DIR_NORTHWEST, DIR_SOUTHWEST
+    )
 
-    var showSouth: Boolean
-        get() = sp.getBoolean("show_south", true)
-        set(v) = sp.edit().putBoolean("show_south", v).apply()
-
-    var showWest: Boolean
-        get() = sp.getBoolean("show_west", true)
-        set(v) = sp.edit().putBoolean("show_west", v).apply()
-
-    var showEast: Boolean
-        get() = sp.getBoolean("show_east", true)
-        set(v) = sp.edit().putBoolean("show_east", v).apply()
-
-    var showNortheast: Boolean
-        get() = sp.getBoolean("show_northeast", true)
-        set(v) = sp.edit().putBoolean("show_northeast", v).apply()
-
-    var showSoutheast: Boolean
-        get() = sp.getBoolean("show_southeast", true)
-        set(v) = sp.edit().putBoolean("show_southeast", v).apply()
-
-    var showNorthwest: Boolean
-        get() = sp.getBoolean("show_northwest", true)
-        set(v) = sp.edit().putBoolean("show_northwest", v).apply()
-
-    var showSouthwest: Boolean
-        get() = sp.getBoolean("show_southwest", true)
-        set(v) = sp.edit().putBoolean("show_southwest", v).apply()
-
-    fun showDir(dir: String): Boolean = when (dir) {
-        DIR_NORTH -> showNorth
-        DIR_SOUTH -> showSouth
-        DIR_WEST -> showWest
-        DIR_EAST -> showEast
-        DIR_NORTHEAST -> showNortheast
-        DIR_SOUTHEAST -> showSoutheast
-        DIR_NORTHWEST -> showNorthwest
-        DIR_SOUTHWEST -> showSouthwest
-        else -> true
-    }
+    fun showDir(dir: String): Boolean = sp.getBoolean("show_$dir", true)
 
     fun setShowDir(dir: String, show: Boolean) {
-        when (dir) {
-            DIR_NORTH -> showNorth = show
-            DIR_SOUTH -> showSouth = show
-            DIR_WEST -> showWest = show
-            DIR_EAST -> showEast = show
-            DIR_NORTHEAST -> showNortheast = show
-            DIR_SOUTHEAST -> showSoutheast = show
-            DIR_NORTHWEST -> showNorthwest = show
-            DIR_SOUTHWEST -> showSouthwest = show
-        }
+        sp.edit().putBoolean("show_$dir", show).apply()
     }
 }
