@@ -82,6 +82,7 @@
 **/local.properties
 *.jks
 *.keystore
+keystore.properties
 
 # Gradle wrapper jar must stay tracked
 !gradle/wrapper/gradle-wrapper.jar

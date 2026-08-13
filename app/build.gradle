@@ -3,6 +3,14 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+// 读取本地签名配置（keystore.properties 不入库，防止泄露签名密码）
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+def keystoreProperties = new Properties()
+def hasKeystore = keystorePropertiesFile.exists()
+if (hasKeystore) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace 'com.compassoverlay'
     compileSdk 34
@@ -11,9 +19,9 @@ android {
         applicationId "com.compassoverlay"
         minSdk 26
         targetSdk 34
-        versionCode 17
-        versionName "1.16"
-        buildConfigField "String", "UPDATE_URL", "\"https://8080-79eaae0f5c7dd70e.monkeycode-ai.online/version.json\""
+        versionCode 18
+        versionName "1.17"
+        buildConfigField "String", "UPDATE_URL", "\"https://raw.githubusercontent.com/kkxxdbx/compass-overlay/master/version.json\""
     }
 
     buildFeatures {
@@ -22,10 +30,12 @@ android {
 
     signingConfigs {
         release {
-            storeFile file('compass-release.jks')
-            storePassword 'compass123'
-            keyAlias 'compass'
-            keyPassword 'compass123'
+            if (hasKeystore) {
+                storeFile rootProject.file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
         }
     }
 
@@ -33,7 +43,7 @@ android {
         release {
             minifyEnabled true
             shrinkResources true
-            signingConfig signingConfigs.release
+            signingConfig hasKeystore ? signingConfigs.release : signingConfigs.debug
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -50,4 +60,6 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'com.google.android.material:material:1.12.0'
+
+    testImplementation 'junit:junit:4.13.2'
 }
