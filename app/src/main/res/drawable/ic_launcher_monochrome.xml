@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Android 13+ 主题图标：单色白色罗盘 -->
+    <path
+        android:pathData="M54,18 a36,36 0 1,1 -0.01,0"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="4"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M54,14 L54,22 M54,86 L54,94 M14,54 L22,54 M86,54 L94,54"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M78,30 L82,26 M78,78 L82,82 M30,30 L26,26 M30,78 L26,82"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M54,36 L60,54 L54,72 L48,54 Z"
+        android:fillColor="#FFFFFFFF" />
+</vector>

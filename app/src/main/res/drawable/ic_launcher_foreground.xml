@@ -5,20 +5,68 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
+    <!-- 外圈 -->
     <path
-        android:pathData="M54,24 a30,30 0 1,1 -0.01,0"
+        android:pathData="M54,18 a36,36 0 1,1 -0.01,0"
         android:strokeColor="#FFFFFF"
         android:strokeWidth="4"
         android:fillColor="#00000000" />
 
+    <!-- 四正向刻度（更长更醒目） -->
     <path
-        android:pathData="M54,30 L63,54 L54,78 L45,54 Z"
+        android:pathData="M54,14 L54,22"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M54,86 L54,94"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M14,54 L22,54"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M86,54 L94,54"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+
+    <!-- 四斜角刻度（较短） -->
+    <path
+        android:pathData="M78,30 L82,26"
+        android:strokeColor="#CCFFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M78,78 L82,82"
+        android:strokeColor="#CCFFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M30,30 L26,26"
+        android:strokeColor="#CCFFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M30,78 L26,82"
+        android:strokeColor="#CCFFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round" />
+
+    <!-- 罗盘指针（红色菱形，指北） -->
+    <path
+        android:pathData="M54,36 L60,54 L54,72 L48,54 Z"
         android:fillColor="#FF5252" />
 
+    <!-- 指针左半高光 -->
     <path
-        android:pathData="M54,30 L60,52 L48,52 Z"
+        android:pathData="M54,36 L58,52 L50,52 Z"
         android:fillColor="#FFFFFF" />
 
+    <!-- 中心点 -->
     <path
         android:pathData="M54,50 m-2.5,0 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0"
         android:fillColor="#1A1C1E" />
