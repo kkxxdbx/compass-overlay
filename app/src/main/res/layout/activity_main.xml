@@ -3,7 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg"
     android:fillViewport="true">
 
     <LinearLayout
@@ -57,7 +56,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="悬浮窗开关"
+                            android:text="@string/setting_overlay_title"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp" />
 
@@ -65,7 +64,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="打开后在任意 App（如原神）上方显示方向"
+                            android:text="@string/setting_overlay_desc"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -95,7 +94,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="显示的字（每个字都可单独拖动）"
+                    android:text="@string/setting_dirs_title"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp" />
 
@@ -103,6 +102,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:baselineAligned="false"
                     android:orientation="horizontal">
 
                     <LinearLayout
@@ -115,7 +115,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="北"
+                            android:text="@string/dir_north"
                             android:textColor="@color/text_primary"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -136,7 +136,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="南"
+                            android:text="@string/dir_south"
                             android:textColor="@color/text_primary"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -157,7 +157,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="西"
+                            android:text="@string/dir_west"
                             android:textColor="@color/text_primary"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -178,7 +178,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="东"
+                            android:text="@string/dir_east"
                             android:textColor="@color/text_primary"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -194,6 +194,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:baselineAligned="false"
                     android:orientation="horizontal">
 
                     <LinearLayout
@@ -206,7 +207,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="东北"
+                            android:text="@string/dir_northeast"
                             android:textColor="@color/text_primary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -227,7 +228,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="东南"
+                            android:text="@string/dir_southeast"
                             android:textColor="@color/text_primary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -248,7 +249,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="西北"
+                            android:text="@string/dir_northwest"
                             android:textColor="@color/text_primary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -269,7 +270,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="西南"
+                            android:text="@string/dir_southwest"
                             android:textColor="@color/text_primary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -285,9 +286,16 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="文字大小"
+                    android:text="@string/setting_size_title"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/txtSize"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
 
                 <SeekBar
                     android:id="@+id/seekSize"
@@ -305,7 +313,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="文字加粗"
+                        android:text="@string/setting_bold_title"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp" />
 
@@ -319,7 +327,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="文字颜色"
+                    android:text="@string/setting_color_title"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp" />
 
@@ -334,7 +342,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="背景样式"
+                    android:text="@string/setting_bg_title"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp" />
 
@@ -350,7 +358,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="无背景"
+                        android:text="@string/setting_bg_none"
                         android:textColor="@color/text_primary" />
 
                     <RadioButton
@@ -358,7 +366,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="深色圆角"
+                        android:text="@string/setting_bg_dark"
                         android:textColor="@color/text_primary" />
                 </RadioGroup>
 
@@ -366,9 +374,16 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="背景不透明度"
+                    android:text="@string/setting_bg_alpha_title"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/txtAlpha"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
 
                 <SeekBar
                     android:id="@+id/seekBgAlpha"
@@ -380,7 +395,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="排列间距（整体大小）"
+                    android:text="@string/setting_spacing_title"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp" />
 
@@ -394,7 +409,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="调节后立即生效，整体布局随之变大变小"
+                    android:text="@string/setting_spacing_desc"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
 
@@ -407,7 +422,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="排列模式"
+                    android:text="@string/setting_arrange_title"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp" />
 
@@ -415,7 +430,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="十字模式会自动隐藏东北/东南/西北/西南四个斜角字，八方模式自动显示"
+                    android:text="@string/setting_arrange_desc"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
 
@@ -432,7 +447,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="一键摆成十字"
+                        android:text="@string/arrange_cross_btn"
                         android:textSize="14sp"
                         app:cornerRadius="12dp" />
 
@@ -441,7 +456,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="一键摆成八方"
+                        android:text="@string/arrange_eight_btn"
                         android:textSize="14sp"
                         app:cornerRadius="12dp" />
                 </com.google.android.material.button.MaterialButtonToggleGroup>
@@ -462,7 +477,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="整体移动"
+                            android:text="@string/setting_group_move_title"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp" />
 
@@ -470,7 +485,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="开启后拖动任意一个字，八个字整体一起移动"
+                            android:text="@string/setting_group_move_desc"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -501,7 +516,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="使用说明"
+                    android:text="@string/setting_usage_title"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp" />
 

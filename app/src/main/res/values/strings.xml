@@ -1,7 +1,38 @@
 <resources>
     <string name="app_name">方向罗盘</string>
-    <string name="spacing_value">当前间距：%1$d dp</string>
     <string name="app_subtitle">北、南、西、东及四个斜角，八个字各自独立可拖</string>
+
+    <!-- 悬浮窗开关 -->
+    <string name="setting_overlay_title">悬浮窗开关</string>
+    <string name="setting_overlay_desc">打开后在任意 App（如原神）上方显示方向</string>
+
+    <!-- 显示的字 -->
+    <string name="setting_dirs_title">显示的字（每个字都可单独拖动）</string>
+
+    <!-- 文字样式 -->
+    <string name="setting_size_title">文字大小</string>
+    <string name="setting_size_value">字号：%1$d sp</string>
+    <string name="setting_bold_title">文字加粗</string>
+    <string name="setting_color_title">文字颜色</string>
+    <string name="setting_bg_title">背景样式</string>
+    <string name="setting_bg_none">无背景</string>
+    <string name="setting_bg_dark">深色圆角</string>
+    <string name="setting_bg_alpha_title">背景不透明度</string>
+    <string name="setting_bg_alpha_value">不透明度：%1$d</string>
+
+    <!-- 排列 -->
+    <string name="setting_spacing_title">排列间距（整体大小）</string>
+    <string name="spacing_value">当前间距：%1$d dp</string>
+    <string name="setting_spacing_desc">调节后立即生效，整体布局随之变大变小</string>
+    <string name="setting_arrange_title">排列模式</string>
+    <string name="setting_arrange_desc">十字模式会自动隐藏东北/东南/西北/西南四个斜角字，八方模式自动显示</string>
+    <string name="arrange_cross_btn">一键摆成十字</string>
+    <string name="arrange_eight_btn">一键摆成八方</string>
+    <string name="setting_group_move_title">整体移动</string>
+    <string name="setting_group_move_desc">开启后拖动任意一个字，八个字整体一起移动</string>
+
+    <!-- 使用说明 -->
+    <string name="setting_usage_title">使用说明</string>
     <string name="usage">1. 打开「悬浮窗开关」，首次会跳转到系统授权页，请允许「显示在其他应用上层」。\n\n2. 点「一键摆成十字」或「一键摆成八方」快速排好方位；拖动任意一个字即可把它放到任意位置，位置会分别保存。\n\n3. 开启「整体移动」后，拖动任意一个字，八个字会作为一个整体一起移动，整体摆放更省事。\n\n4. 「排列间距」调节整体布局大小，拖动滑块立即生效，无需重新点按钮。\n\n5. 不需要某个字时，可在「显示的字」里单独关掉它；「文字加粗」可切换粗体/细体。\n\n提示：若字挡视线，可开启「深色圆角」背景并调低不透明度，或直接关闭开关。</string>
 
     <!-- 八个方向字文案 -->
@@ -13,6 +44,25 @@
     <string name="dir_southeast">东南</string>
     <string name="dir_northwest">西北</string>
     <string name="dir_southwest">西南</string>
+
+    <!-- 重排确认 -->
+    <string name="rearrange_title">重新排列</string>
+    <string name="rearrange_message">重新排列会把八个方向字恢复到屏幕中心位置，当前手动摆放的位置会被覆盖。是否继续？</string>
+    <string name="rearrange_confirm">重新排列</string>
+    <string name="cancel">取消</string>
+
+    <!-- 电池优化引导 -->
+    <string name="battery_title">允许后台运行</string>
+    <string name="battery_message">为保证悬浮窗在后台长期稳定显示、不被系统清理，建议允许「后台运行」（省电策略设为无限制）。\n\n该权限仅用于防止服务被系统回收，不会影响正常使用。</string>
+    <string name="battery_go">去开启</string>
+    <string name="battery_later">暂不</string>
+
+    <!-- 更新检查 -->
+    <string name="update_title">发现新版本</string>
+    <string name="update_message">当前版本 %1$s，新版本 %2$s 已发布，建议更新。</string>
+    <string name="update_now">立即更新</string>
+    <string name="update_later">暂不更新</string>
+    <string name="update_exit">退出</string>
 
     <!-- 前台服务通知 -->
     <string name="notify_title">方向罗盘已开启</string>
