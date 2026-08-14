@@ -8,7 +8,7 @@
 
 **CompassOverlay is an Android floating-window compass tool that pins the eight directions (North / South / West / East / NE / NW / SE / SW) on top of any game, with drag-and-drop positioning and adjustable spacing.**
 
-![Version](https://img.shields.io/badge/version-1.17-blue)
+![Version](https://img.shields.io/badge/version-1.18-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Android](https://img.shields.io/badge/Android-8.0+-informational)
 ![Kotlin](https://img.shields.io/badge/Kotlin-1.9.24-purple)
@@ -42,6 +42,9 @@
 - **屏幕适配**：横竖屏切换自动夹回屏幕内，平板 / 手机自适应默认间距与字号
 - **深色模式**：设置页跟随系统深浅色主题
 - **自动更新检查**：启动时静默检查新版本，可提示或强制更新
+- **游戏快捷启动**：首页面板一键启动原神、鸣潮、星穹铁道、异环、绝区零（自动匹配国服 / 国际服 / 渠道服包名）
+- **首次使用引导**：竖屏进入新手引导，8 步快速上手，完成后平滑过渡到横屏设置页
+- **横屏分栏设置页**：左侧导航 + 分栏面板，竖屏余白更少、操作更顺手
 
 ### 演示截图
 
@@ -95,8 +98,10 @@ release 包使用 `keystore.properties` 读取签名信息，模板见 [`keystor
 ### 项目结构
 
 ```
-app/src/main/java/com/compassoverlay/
-├── MainActivity.kt        设置页
+app/src/main/java/com/DirectionalCompass/
+├── MainActivity.kt        设置页（横屏分栏 + 游戏快捷启动绑定）
+├── OnboardingActivity.kt  首次启动新手引导（竖屏，完成后转横屏）
+├── GameLauncher.kt        游戏包名解析 / 图标 / 一键启动
 ├── OverlayService.kt      前台服务 + 悬浮窗多窗口管理 + 帧合并拖动
 ├── CompassOverlayView.kt  方向字视图（拖拽手势、共享背景）
 ├── CompassGeometry.kt     罗盘布局几何计算（纯函数，可单测）

@@ -1,4 +1,4 @@
-package com.compassoverlay
+package com.DirectionalCompass
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -103,11 +103,12 @@ class OverlayService : Service() {
 
     /**
      * 跟随间隔：非锚点方向字每隔多少帧同步一次位置。
-     * 例如 144Hz 屏 => 间隔 2 帧（约 72Hz），锚点字仍每帧跟手，
-     * 在保证跟手感的同时降低多窗口 IPC 开销。
+     * 锚点字仍每帧跟手；其余字按此节流，明显降低多窗口 IPC 开销，
+     * 缓解整体移动时的掉帧。60Hz 屏约 30Hz 跟随，120Hz 屏约 40Hz，
+     * 跟手感差异很小，但开销接近减半。
      */
     private val followInterval: Int by lazy {
-        kotlin.math.max(1, (refreshRateHz / 60f).roundToInt())
+        kotlin.math.max(2, (refreshRateHz / 40f).roundToInt())
     }
 
     /**
@@ -126,7 +127,9 @@ class OverlayService : Service() {
                     frameCount++
                     if (frameCount >= followInterval) {
                         frameCount = 0
-                        labels.forEach { l -> if (l !== anchor) updatePos(l, currentDx, currentDy) }
+                        for (l in labels) {
+                            if (l !== anchor) updatePos(l, currentDx, currentDy)
+                        }
                     }
                 }
             }

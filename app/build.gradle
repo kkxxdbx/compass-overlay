@@ -12,15 +12,15 @@ if (hasKeystore) {
 }
 
 android {
-    namespace 'com.compassoverlay'
+    namespace 'com.DirectionalCompass'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.compassoverlay"
+        applicationId "com.DirectionalCompass"
         minSdk 26
         targetSdk 34
-        versionCode 18
-        versionName "1.17"
+        versionCode 19
+        versionName "1.18"
         buildConfigField "String", "UPDATE_URL", "\"https://raw.githubusercontent.com/kkxxdbx/compass-overlay/master/version.json\""
     }
 

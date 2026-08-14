@@ -1,4 +1,4 @@
-package com.compassoverlay
+package com.DirectionalCompass
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -64,6 +64,11 @@ object Prefs {
     var enabled: Boolean
         get() = sp.getBoolean("enabled", true)
         set(v) = sp.edit().putBoolean("enabled", v).apply()
+
+    /** 新手引导是否已完成，完成前冷启动先进 OnboardingActivity */
+    var onboarded: Boolean
+        get() = sp.getBoolean("onboarded", false)
+        set(v) = sp.edit().putBoolean("onboarded", v).apply()
 
     var textSizeSp: Int
         get() = sp.getInt("text_size", 16)

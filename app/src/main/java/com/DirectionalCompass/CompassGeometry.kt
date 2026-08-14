@@ -1,4 +1,4 @@
-package com.compassoverlay
+package com.DirectionalCompass
 
 /**
  * 罗盘布局几何计算的纯函数集合（不依赖 Android 运行时，便于单元测试）。
