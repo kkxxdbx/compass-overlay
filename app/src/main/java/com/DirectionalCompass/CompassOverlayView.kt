@@ -1,4 +1,4 @@
-package com.compassoverlay
+package com.DirectionalCompass
 
 import android.content.Context
 import android.graphics.Color

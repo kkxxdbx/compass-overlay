@@ -2,14 +2,7 @@
     <string name="app_name">方向罗盘</string>
     <string name="app_subtitle">北、南、西、东及四个斜角，八个字各自独立可拖</string>
 
-    <!-- 悬浮窗开关 -->
-    <string name="setting_overlay_title">悬浮窗开关</string>
-    <string name="setting_overlay_desc">打开后在任意 App（如原神）上方显示方向</string>
-
     <!-- 显示的字 -->
-    <string name="setting_dirs_title">显示的字（每个字都可单独拖动）</string>
-
-    <!-- 文字样式 -->
     <string name="setting_size_title">文字大小</string>
     <string name="setting_size_value">字号：%1$d sp</string>
     <string name="setting_bold_title">文字加粗</string>
@@ -32,7 +25,6 @@
     <string name="setting_group_move_desc">开启后拖动任意一个字，八个字整体一起移动</string>
 
     <!-- 使用说明 -->
-    <string name="setting_usage_title">使用说明</string>
     <string name="usage">1. 打开「悬浮窗开关」，首次会跳转到系统授权页，请允许「显示在其他应用上层」。\n\n2. 点「一键摆成十字」或「一键摆成八方」快速排好方位；拖动任意一个字即可把它放到任意位置，位置会分别保存。\n\n3. 开启「整体移动」后，拖动任意一个字，八个字会作为一个整体一起移动，整体摆放更省事。\n\n4. 「排列间距」调节整体布局大小，拖动滑块立即生效，无需重新点按钮。\n\n5. 不需要某个字时，可在「显示的字」里单独关掉它；「文字加粗」可切换粗体/细体。\n\n提示：若字挡视线，可开启「深色圆角」背景并调低不透明度，或直接关闭开关。</string>
 
     <!-- 八个方向字文案 -->
@@ -67,4 +59,83 @@
     <!-- 前台服务通知 -->
     <string name="notify_title">方向罗盘已开启</string>
     <string name="notify_text">点击打开设置：整体移动、十字/八方模式、调间距字号</string>
+
+    <!-- 界面美化 -->
+    <string name="status_running">悬浮窗运行中</string>
+    <string name="status_stopped">悬浮窗未开启</string>
+    <string name="about_version">方向罗盘 v%1$s</string>
+
+    <!-- 左侧导航 -->
+    <string name="nav_overview">悬浮窗</string>
+    <string name="nav_style">样式</string>
+    <string name="nav_arrange">排列</string>
+    <string name="nav_tutorial">教程</string>
+    <string name="nav_about">关于</string>
+    <string name="overview_sub">· 显示的字</string>
+    <string name="quick_arrange_title">快速排列</string>
+    <string name="quick_arrange_desc">一键把方向字摆回屏幕中心，喜欢的位置会保留</string>
+    <string name="tip_title">小提示</string>
+    <string name="tip_body">· 点任意一个方向字，可快速回到设置页。\n· 想让八个字跟着一起走，在左侧「排列」页开启「整体移动」。</string>
+
+    <!-- 游戏快捷启动 -->
+    <string name="game_launch_title">游戏快捷启动</string>
+    <string name="game_launch_desc">点击图标直接启动已安装的游戏</string>
+    <string name="game_genshin">原神</string>
+    <string name="game_wuthering">鸣潮</string>
+    <string name="game_starrail">崩坏星穹铁道</string>
+    <string name="game_neverness">异环</string>
+    <string name="game_zzz">绝区零</string>
+    <string name="game_not_installed">未检测到该游戏</string>
+
+
+    <!-- 横向布局面板标题 -->
+    <string name="panel_dirs">方向字</string>
+    <string name="panel_style">文字样式</string>
+    <string name="panel_bg">背景样式</string>
+    <string name="panel_spacing">排列间距</string>
+    <string name="panel_arrange">排列模式</string>
+    <string name="quick_start">快速上手</string>
+    <string name="feat_title">主要特性</string>
+    <string name="feat_1">八个方向字各自独立拖拽摆放</string>
+    <string name="feat_2">一键十字 / 八方自动排布</string>
+    <string name="feat_3">支持深色模式与多套文字配色</string>
+    <string name="feat_4">悬浮窗不挡操作，随开随关</string>
+
+    <!-- 关于页 -->
+    <string name="about_desc">一个小巧可爱的方向罗盘悬浮窗，八个方向字各自独立可拖，玩游戏、看地图都好用。</string>
+
+    <!-- 新手引导 -->
+    <string name="onboard_welcome">欢迎使用方向罗盘</string>
+    <string name="onboard_welcome_desc">两步完成设置，马上开始用</string>
+    <string name="onboard_perm_overlay">悬浮窗权限</string>
+    <string name="onboard_perm_pkg">读取应用列表</string>
+    <string name="onboard_perm_pkg_desc">用于游戏快捷启动，安装时已自动授权</string>
+    <string name="onboard_perm_granted">已授权</string>
+    <string name="onboard_perm_grant">去授权</string>
+    <string name="onboard_perm_not_granted">未授权</string>
+    <string name="onboard_perm_hint">授权悬浮窗后，「下一步」会亮起；若被永久拒绝，请在系统设置中手动开启</string>
+    <string name="onboard_next">下一步</string>
+    <string name="onboard_prev">上一步</string>
+    <string name="onboard_finish">开始使用</string>
+    <string name="onboard_tutorial_title">功能引导</string>
+    <string name="onboard_step">%1$d / %2$d</string>
+
+    <!-- 功能引导各步骤 -->
+    <string name="step_switch_title">打开悬浮窗</string>
+    <string name="step_switch_desc">在悬浮窗页打开总开关，八个方向字就会出现在屏幕上。</string>
+    <string name="step_arrange_title">快速排列与方向字</string>
+    <string name="step_arrange_desc">点「一键摆成十字」或「一键摆成八方」快速排好方位；拖动任意一个字可放到任意位置。</string>
+    <string name="step_game_title">游戏快捷启动</string>
+    <string name="step_game_desc">设置页底部一键启动已安装的游戏，点图标直接进入。</string>
+    <string name="step_style_title">文字样式</string>
+    <string name="step_style_desc">「样式」页可调字号大小与文字加粗，让方向字更醒目。</string>
+    <string name="step_color_title">文字颜色</string>
+    <string name="step_color_desc">「样式」页提供多套颜色，点色块即可更换文字颜色。</string>
+    <string name="step_bg_title">背景样式与不透明度</string>
+    <string name="step_bg_desc">可给方向字加深色圆角背景，并调节不透明度，挡视线时很有用。</string>
+    <string name="step_spacing_title">排列间距</string>
+    <string name="step_spacing_desc">「排列」页拖动间距滑块，整体布局随之变大变小，立即生效。</string>
+    <string name="step_groupmove_title">整体移动</string>
+    <string name="step_groupmove_desc">开启「整体移动」后，拖动任意一个字，八个字作为一个整体一起移动。</string>
+
 </resources>

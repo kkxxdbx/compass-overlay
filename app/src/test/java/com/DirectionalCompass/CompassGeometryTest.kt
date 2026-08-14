@@ -1,4 +1,4 @@
-package com.compassoverlay
+package com.DirectionalCompass
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

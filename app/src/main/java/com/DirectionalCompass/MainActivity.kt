@@ -1,21 +1,26 @@
-package com.compassoverlay
+package com.DirectionalCompass
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
+import android.view.Gravity
 import android.view.View
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.materialswitch.MaterialSwitch
+import com.google.android.material.navigationrail.NavigationRailView
 
 class MainActivity : AppCompatActivity() {
 
@@ -32,6 +37,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Prefs.init(this)
+        // 首次启动未完成引导时，先进入新手引导再回主界面
+        if (!Prefs.onboarded) {
+            startActivity(Intent(this, OnboardingActivity::class.java))
+            finish()
+            return
+        }
         setContentView(R.layout.activity_main)
 
         val switchEnabled = findViewById<MaterialSwitch>(R.id.switchEnabled)
@@ -195,9 +206,118 @@ class MainActivity : AppCompatActivity() {
         }
 
         buildColorRow()
+        findViewById<TextView>(R.id.txtVersion).text =
+            getString(R.string.about_version, BuildConfig.VERSION_NAME)
+        bindQuickArrange()
+        bindGameRow()
         syncUi()
+        updateStatus()
+        val rail = findViewById<NavigationRailView>(R.id.rail)
+        rail.setOnItemSelectedListener { item ->
+            switchPage(item.itemId)
+            true
+        }
+        rail.selectedItemId = R.id.nav_overview
         UpdateChecker.check(this)
         promptBatteryOptimization()
+    }
+
+    /** 悬浮窗页底部的快速排列按钮 */
+    private fun bindQuickArrange() {
+        findViewById<MaterialButton>(R.id.btnQuickCross).setOnClickListener {
+            if (OverlayService.isRunning()) {
+                confirmRearrange(Prefs.ARRANGE_CROSS)
+            } else {
+                Prefs.lastArrange = Prefs.ARRANGE_CROSS
+                setDiagonalsVisible(false)
+                syncUi()
+            }
+        }
+        findViewById<MaterialButton>(R.id.btnQuickEight).setOnClickListener {
+            if (OverlayService.isRunning()) {
+                confirmRearrange(Prefs.ARRANGE_EIGHT)
+            } else {
+                Prefs.lastArrange = Prefs.ARRANGE_EIGHT
+                setDiagonalsVisible(true)
+                syncUi()
+            }
+        }
+    }
+
+    /**
+     * 悬浮窗页底部的游戏快捷启动行。
+     * 每款游戏一个图标，动态解析已安装包名并显示系统图标，
+     * 点击直接启动游戏；未安装则显示占位并提示。
+     */
+    private fun bindGameRow() {
+        val row = findViewById<LinearLayout>(R.id.gameRow)
+        val names = mapOf(
+            "genshin" to R.string.game_genshin,
+            "wuthering" to R.string.game_wuthering,
+            "starrail" to R.string.game_starrail,
+            "neverness" to R.string.game_neverness,
+            "zzz" to R.string.game_zzz
+        )
+        val placeholders = mapOf(
+            "genshin" to R.drawable.game_genshin,
+            "wuthering" to R.drawable.game_wuthering,
+            "starrail" to R.drawable.game_starrail,
+            "neverness" to R.drawable.game_neverness,
+            "zzz" to R.drawable.game_zzz
+        )
+        val iconSize = dp(44)
+        val textSp = 11f
+        GameLauncher.GAMES.forEach { game ->
+            val cell = LinearLayout(this)
+            cell.orientation = LinearLayout.VERTICAL
+            cell.gravity = Gravity.CENTER_HORIZONTAL
+            val w = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT)
+            w.weight = 1f
+            w.topMargin = dp(2)
+            cell.layoutParams = w
+
+            val icon = ImageView(this)
+            icon.setBackgroundResource(R.drawable.game_bg)
+            icon.scaleType = ImageView.ScaleType.CENTER_CROP
+            icon.clipToOutline = true
+            val pkg = GameLauncher.resolvePackage(this, game)
+            val installed = pkg != null
+            if (installed) {
+                icon.setImageDrawable(GameLauncher.iconOf(this, pkg!!))
+            } else {
+                icon.setImageResource(placeholders[game.name] ?: R.drawable.ic_compass)
+            }
+            icon.layoutParams = LinearLayout.LayoutParams(iconSize, iconSize)
+            cell.addView(icon)
+
+            val label = TextView(this)
+            label.text = getString(names[game.name] ?: R.string.game_not_installed)
+            label.setTextColor(getColor(R.color.text_secondary))
+            label.textSize = textSp
+            label.layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            cell.addView(label)
+
+            cell.setOnClickListener { GameLauncher.launch(this, game) }
+            row.addView(cell)
+        }
+    }
+
+    /** 左侧导航切换对应页面 */
+    private fun switchPage(itemId: Int) {        findViewById<View>(R.id.pageOverview).visibility =
+            if (itemId == R.id.nav_overview) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.pageStyle).visibility =
+            if (itemId == R.id.nav_style) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.pageArrange).visibility =
+            if (itemId == R.id.nav_arrange) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.pageTutorial).visibility =
+            if (itemId == R.id.nav_tutorial) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.pageAbout).visibility =
+            if (itemId == R.id.nav_about) View.VISIBLE else View.GONE
+        syncUi()
+        updateStatus()
     }
 
     /** 仅设置斜角方向字的显示/隐藏（不移动任何位置） */
@@ -270,7 +390,7 @@ class MainActivity : AppCompatActivity() {
             d.shape = android.graphics.drawable.GradientDrawable.OVAL
             d.setColor(color)
             if (color == Prefs.textColor) {
-                d.setStroke(dp(3), 0xFF2196F3.toInt())
+                d.setStroke(dp(3), getColor(R.color.accent))
             }
             v.background = d
             v.setOnClickListener {
@@ -332,6 +452,17 @@ class MainActivity : AppCompatActivity() {
         syncingToggle = false
     }
 
+    /** 刷新顶部悬浮窗运行状态指示 */
+    private fun updateStatus() {
+        val running = OverlayService.isRunning()
+        findViewById<TextView>(R.id.txtStatus).text =
+            getString(if (running) R.string.status_running else R.string.status_stopped)
+        val dot = findViewById<View>(R.id.statusDot)
+        dot.backgroundTintList = ColorStateList.valueOf(
+            getColor(if (running) R.color.status_on else R.color.status_off)
+        )
+    }
+
     private fun enableOverlay() {
         if (!Settings.canDrawOverlays(this)) {
             val intent = Intent(
@@ -359,6 +490,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         Prefs.init(this)
         syncUi()
+        updateStatus()
     }
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
